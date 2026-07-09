@@ -23,6 +23,7 @@ CREATE TABLE IF NOT EXISTS `users` (
 INSERT INTO `users` (`nama_user`, `nim`, `kelas`, `konsentrasi`, `pin`) VALUES
 ('Alvin Nurfaiz', '232101111', 'TiF 23 CNS J', 'Computer and Network Security', '1234'),
 ('M. Yusman Bayuga', '232101145', 'TiF 23 CiD G', 'Creative Interactive Design', '1234');
+
 -- --------------------------------------------------------
 -- 3. Struktur dari tabel `kehadiran`
 -- --------------------------------------------------------
@@ -31,6 +32,7 @@ CREATE TABLE IF NOT EXISTS `kehadiran` (
   `user_id` int(11) NOT NULL,
   `tanggal` date NOT NULL,
   `waktu_masuk` time NOT NULL,
+  `waktu_keluar` time DEFAULT NULL, 
   `status` enum('Hadir','Sakit','Izin') NOT NULL,
   PRIMARY KEY (`id`),
   KEY `user_id` (`user_id`),
