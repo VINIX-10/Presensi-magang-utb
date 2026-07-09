@@ -10,6 +10,7 @@ CREATE TABLE IF NOT EXISTS `users` (
   `nama_user` varchar(100) NOT NULL,
   `nim` varchar(20) NOT NULL,
   `kelas` varchar(50) NOT NULL,
+  `konsentrasi` varchar(100) NOT NULL,
   `pin` varchar(4) NOT NULL,
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
@@ -19,9 +20,9 @@ CREATE TABLE IF NOT EXISTS `users` (
 -- Sesuai dengan tampilan di halaman login.php
 -- PIN default diatur menjadi: 1234
 -- --------------------------------------------------------
-INSERT INTO `users` (`nama_user`, `nim`, `kelas`, `pin`) VALUES
-('Alvin Nurfaiz', '232101111', 'TiF 23 CNS J', '1234'),
-('M. Yusman Bayuga', '232101145', 'TiF 23 CiD G', '1234');
+INSERT INTO `users` (`nama_user`, `nim`, `kelas`, `konsentrasi`, `pin`) VALUES
+('Alvin Nurfaiz', '232101111', 'TiF 23 CNS J', 'Computer and Network Security', '1234'),
+('M. Yusman Bayuga', '232101145', 'TiF 23 CiD G', 'CiD', 'Creative Interactive Design', '1234');
 
 -- --------------------------------------------------------
 -- 3. Struktur dari tabel `kehadiran`
