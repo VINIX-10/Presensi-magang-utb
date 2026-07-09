@@ -22,8 +22,7 @@ CREATE TABLE IF NOT EXISTS `users` (
 -- --------------------------------------------------------
 INSERT INTO `users` (`nama_user`, `nim`, `kelas`, `konsentrasi`, `pin`) VALUES
 ('Alvin Nurfaiz', '232101111', 'TiF 23 CNS J', 'Computer and Network Security', '1234'),
-('M. Yusman Bayuga', '232101145', 'TiF 23 CiD G', 'CiD', 'Creative Interactive Design', '1234');
-
+('M. Yusman Bayuga', '232101145', 'TiF 23 CiD G', 'Creative Interactive Design', '1234');
 -- --------------------------------------------------------
 -- 3. Struktur dari tabel `kehadiran`
 -- --------------------------------------------------------
