@@ -1,23 +1,38 @@
 <?php
 session_start();
+require 'koneksi.php'; // Hubungkan ke database
+date_default_timezone_set('Asia/Jakarta');
 
 // 1. Cek apakah user sudah login
-if (!isset($_SESSION['nama_user'])) {
-    header("Location: login.php"); // Jika belum, paksa pindah ke login
+if (!isset($_SESSION['nama_user']) || !isset($_SESSION['user_id'])) {
+    header("Location: login.php");
     exit;
 }
 
 // 2. Cek Timeout (15 Menit = 900 Detik)
-$timeout_duration = 20; 
+$timeout_duration = 200; 
 if (isset($_SESSION['last_activity']) && (time() - $_SESSION['last_activity']) > $timeout_duration) {
     session_unset();
     session_destroy();
-    header("Location: login.php"); // Jika lebih dari 15 menit, paksa login ulang
+    header("Location: login.php");
     exit;
 }
-
-// 3. Perbarui waktu aktivitas terakhir agar 15 menit terhitung dari aksi terbaru
 $_SESSION['last_activity'] = time();
+
+$user_id = $_SESSION['user_id'];
+
+// Mengambil seluruh data kehadiran user ini, diurutkan dari tanggal terbaru
+$query_riwayat = $conn->query("SELECT * FROM kehadiran WHERE user_id = '$user_id' ORDER BY tanggal DESC");
+
+// Fungsi sederhana untuk translate nama hari ke Bahasa Indonesia
+function hariIndo($tanggal) {
+    $hari_inggris = date('l', strtotime($tanggal));
+    $daftar_hari = [
+        'Sunday' => 'Minggu', 'Monday' => 'Senin', 'Tuesday' => 'Selasa',
+        'Wednesday' => 'Rabu', 'Thursday' => 'Kamis', 'Friday' => 'Jumat', 'Saturday' => 'Sabtu'
+    ];
+    return $daftar_hari[$hari_inggris];
+}
 ?>
 
 <!DOCTYPE html>
@@ -29,13 +44,20 @@ $_SESSION['last_activity'] = time();
     <link rel="stylesheet" href="style.css">
     <script src="https://cdn.tailwindcss.com"></script>
 </head>
-<body class="flex h-screen overflow-hidden text-gray-800">
+<body class="flex h-screen overflow-hidden text-gray-800 bg-[#F4F7FE]">
 
-    <aside class="w-64 bg-white border-r border-gray-100 flex flex-col justify-between hidden md:flex">
+    <div id="sidebarOverlay" class="fixed inset-0 bg-black/50 z-20 hidden md:hidden transition-opacity"></div>
+
+    <aside id="sidebar" class="fixed inset-y-0 left-0 z-30 w-64 bg-white border-r border-gray-100 flex flex-col justify-between transform -translate-x-full md:relative md:translate-x-0 transition-transform duration-300 ease-in-out">
         <div class="p-6">
-            <div class="flex items-center gap-3 mb-10 text-blue-600">
-                <svg class="w-8 h-8" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg>
-                <h1 class="text-xl font-bold tracking-wide">UTB Tracker</h1>
+            <div class="flex items-center justify-between mb-10">
+                <div class="flex items-center gap-3 text-blue-600">
+                    <svg class="w-8 h-8" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg>
+                    <h1 class="text-xl font-bold tracking-wide">UTB Tracker</h1>
+                </div>
+                <button id="closeSidebarBtn" class="md:hidden text-gray-400 hover:text-red-500 focus:outline-none">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                </button>
             </div>
             
             <p class="text-xs font-bold text-gray-400 mb-4 tracking-wider">MAIN MENU</p>
@@ -58,40 +80,44 @@ $_SESSION['last_activity'] = time();
         </div>
     </aside>
 
-    <main class="flex-1 flex flex-col overflow-y-auto w-full">
-        <header class="bg-white/80 backdrop-blur-md px-8 py-4 flex justify-between items-center sticky top-0 z-10 border-b border-gray-100">
-            <div class="relative w-96">
-                <h2 class="text-xl font-bold text-gray-800">Riwayat Kehadiran</h2>
+    <main class="flex-1 flex flex-col overflow-y-auto w-full relative">
+        <header class="bg-white/80 backdrop-blur-md px-6 py-4 flex justify-between items-center sticky top-0 z-10 shadow-sm md:shadow-none md:border-b md:border-gray-100">
+            <div class="flex items-center gap-4 w-full md:w-auto">
+                <button id="mobileMenuBtn" class="md:hidden p-2 -ml-2 text-gray-600 hover:text-blue-600 focus:outline-none transition">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path></svg>
+                </button>
+                <div class="relative w-full max-w-xs sm:block">
+                    <h2 class="text-xl font-bold text-gray-800">Riwayat Kehadiran</h2>
+                </div>
             </div>
             <div class="flex items-center gap-4">
-                <button class="bg-blue-500 hover:bg-blue-600 text-white text-sm font-semibold py-2 px-5 rounded-full flex items-center gap-2 shadow-sm transition">
-                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
-                    Export Log
-                </button>
+                <a href="export_excel.php" target="_blank" class="bg-blue-500 hover:bg-blue-600 text-white text-sm font-semibold py-2 px-4 md:px-5 rounded-full flex items-center gap-2 shadow-sm transition">
+                    <svg class="w-4 h-4 hidden md:block" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
+                    <span class="md:hidden">Export</span>
+                    <span class="hidden md:inline">Export Log</span>
+                </a>
             </div>
         </header>
 
-        <div class="p-8 space-y-6">
-            
+        <div class="p-4 md:p-8 space-y-6">
             <div class="flex flex-wrap md:flex-nowrap justify-between items-center gap-4 mb-2">
-                <div class="flex gap-3">
-                    <select class="bg-white border border-gray-200 rounded-lg px-4 py-2 text-sm font-medium focus:outline-none focus:border-blue-500 shadow-sm">
+                <div class="flex gap-3 w-full md:w-auto">
+                    <select class="flex-1 md:flex-none bg-white border border-gray-200 rounded-lg px-4 py-2 text-sm font-medium focus:outline-none focus:border-blue-500 shadow-sm">
                         <option>Semua Bulan</option>
                         <option>Juli 2026</option>
                         <option>Agustus 2026</option>
                     </select>
-                    <select class="bg-white border border-gray-200 rounded-lg px-4 py-2 text-sm font-medium focus:outline-none focus:border-blue-500 shadow-sm">
+                    <select class="flex-1 md:flex-none bg-white border border-gray-200 rounded-lg px-4 py-2 text-sm font-medium focus:outline-none focus:border-blue-500 shadow-sm">
                         <option>Semua Status</option>
                         <option>Hadir</option>
                         <option>Sakit/Izin</option>
-                        <option>Alpa</option>
                     </select>
                 </div>
             </div>
 
             <div class="bg-white rounded-3xl shadow-sm border border-gray-100 overflow-hidden">
                 <div class="overflow-x-auto">
-                    <table class="w-full text-left border-collapse">
+                    <table class="w-full text-left border-collapse min-w-max">
                         <thead>
                             <tr class="bg-gray-50 border-b border-gray-100 text-sm">
                                 <th class="py-4 px-6 font-semibold text-gray-500 rounded-tl-3xl">Tanggal</th>
@@ -103,69 +129,89 @@ $_SESSION['last_activity'] = time();
                             </tr>
                         </thead>
                         <tbody class="text-sm">
-                            <tr class="border-b border-gray-50 hover:bg-gray-50 transition">
-                                <td class="py-4 px-6">
-                                    <p class="font-bold text-gray-800">09 Jul 2026</p>
-                                    <p class="text-xs text-gray-400">Kamis</p>
-                                </td>
-                                <td class="py-4 px-6 font-medium text-gray-800">07:25</td>
-                                <td class="py-4 px-6 text-gray-400 font-medium">Belum Checkout</td>
-                                <td class="py-4 px-6 font-medium">-</td>
-                                <td class="py-4 px-6">
-                                    <span class="bg-blue-100 text-blue-700 py-1 px-3 rounded-full text-xs font-bold">Hadir</span>
-                                </td>
-                                <td class="py-4 px-6">
-                                    <button class="text-gray-400 hover:text-blue-600 transition">Detail</button>
-                                </td>
-                            </tr>
                             
-                            <tr class="border-b border-gray-50 hover:bg-gray-50 transition">
-                                <td class="py-4 px-6">
-                                    <p class="font-bold text-gray-800">08 Jul 2026</p>
-                                    <p class="text-xs text-gray-400">Rabu</p>
-                                </td>
-                                <td class="py-4 px-6 font-medium text-gray-800">07:30</td>
-                                <td class="py-4 px-6 font-medium text-gray-800">17:05</td>
-                                <td class="py-4 px-6 font-medium text-gray-800">9.5 Jam</td>
-                                <td class="py-4 px-6">
-                                    <span class="bg-blue-100 text-blue-700 py-1 px-3 rounded-full text-xs font-bold">Hadir</span>
-                                </td>
-                                <td class="py-4 px-6">
-                                    <button class="text-gray-400 hover:text-blue-600 transition">Detail</button>
-                                </td>
-                            </tr>
+                            <?php 
+                            if ($query_riwayat->num_rows > 0) {
+                                while($row = $query_riwayat->fetch_assoc()): 
+                                    // Format Tanggal
+                                    $tgl_format = date('d M Y', strtotime($row['tanggal']));
+                                    $hari = hariIndo($row['tanggal']);
+                                    
+                                    // Format Jam Masuk
+                                    $jam_masuk = date('H:i', strtotime($row['waktu_masuk']));
+                                    
+                                    // Kalkulasi Jam Keluar & Total Jam
+                                    if (!empty($row['waktu_keluar'])) {
+                                        $jam_keluar = date('H:i', strtotime($row['waktu_keluar']));
+                                        $selisih = strtotime($row['waktu_keluar']) - strtotime($row['waktu_masuk']);
+                                        $total_jam = round($selisih / 3600, 1) . ' Jam';
+                                    } else {
+                                        $jam_keluar = '<span class="text-gray-400">Belum Checkout</span>';
+                                        $total_jam = '-';
+                                    }
 
-                            <tr class="border-b border-gray-50 hover:bg-gray-50 transition">
-                                <td class="py-4 px-6">
-                                    <p class="font-bold text-gray-800">07 Jul 2026</p>
-                                    <p class="text-xs text-gray-400">Selasa</p>
-                                </td>
-                                <td class="py-4 px-6 font-medium text-red-500">08:15 (Late)</td>
-                                <td class="py-4 px-6 font-medium text-gray-800">17:00</td>
-                                <td class="py-4 px-6 font-medium text-gray-800">8.75 Jam</td>
-                                <td class="py-4 px-6">
-                                    <span class="bg-emerald-100 text-emerald-700 py-1 px-3 rounded-full text-xs font-bold">Terlambat</span>
-                                </td>
-                                <td class="py-4 px-6">
-                                    <button class="text-gray-400 hover:text-blue-600 transition">Detail</button>
-                                </td>
-                            </tr>
+                                    // Badge Status
+                                    $badge_class = "bg-blue-100 text-blue-700"; // Default Hadir
+                                    if ($row['status'] == 'Sakit') $badge_class = "bg-amber-100 text-amber-700";
+                                    if ($row['status'] == 'Izin') $badge_class = "bg-rose-100 text-rose-700";
+                            ?>
+                                <tr class="border-b border-gray-50 hover:bg-gray-50 transition">
+                                    <td class="py-4 px-6">
+                                        <p class="font-bold text-gray-800"><?php echo $tgl_format; ?></p>
+                                        <p class="text-xs text-gray-400"><?php echo $hari; ?></p>
+                                    </td>
+                                    <td class="py-4 px-6 font-medium text-gray-800"><?php echo $jam_masuk; ?></td>
+                                    <td class="py-4 px-6 font-medium text-gray-800"><?php echo $jam_keluar; ?></td>
+                                    <td class="py-4 px-6 font-medium text-gray-800"><?php echo $total_jam; ?></td>
+                                    <td class="py-4 px-6">
+                                        <span class="py-1 px-3 rounded-full text-xs font-bold <?php echo $badge_class; ?>">
+                                            <?php echo htmlspecialchars($row['status']); ?>
+                                        </span>
+                                    </td>
+                                    <td class="py-4 px-6">
+                                        <button class="text-gray-400 hover:text-blue-600 transition">Detail</button>
+                                    </td>
+                                </tr>
+                            <?php 
+                                endwhile; 
+                            } else {
+                            ?>
+                                <tr>
+                                    <td colspan="6" class="py-8 text-center text-gray-400 font-medium">
+                                        Belum ada data kehadiran.
+                                    </td>
+                                </tr>
+                            <?php } ?>
+                            
                         </tbody>
                     </table>
                 </div>
                 
                 <div class="p-4 border-t border-gray-100 flex justify-between items-center text-sm text-gray-500">
-                    <p>Menampilkan 1-3 dari 3 data</p>
-                    <div class="flex gap-2">
-                        <button class="px-3 py-1 border border-gray-200 rounded hover:bg-gray-50">Prev</button>
-                        <button class="px-3 py-1 bg-blue-50 text-blue-600 border border-blue-100 rounded font-bold">1</button>
-                        <button class="px-3 py-1 border border-gray-200 rounded hover:bg-gray-50">Next</button>
-                    </div>
+                    <p>Total: <?php echo $query_riwayat->num_rows; ?> data absen</p>
                 </div>
             </div>
 
         </div>
     </main>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const sidebar = document.getElementById('sidebar');
+            const mobileMenuBtn = document.getElementById('mobileMenuBtn');
+            const closeSidebarBtn = document.getElementById('closeSidebarBtn');
+            const sidebarOverlay = document.getElementById('sidebarOverlay');
+
+            const toggleSidebar = () => {
+                sidebar.classList.toggle('-translate-x-full');
+                sidebarOverlay.classList.toggle('hidden');
+            };
+
+            mobileMenuBtn.addEventListener('click', toggleSidebar);
+            closeSidebarBtn.addEventListener('click', toggleSidebar);
+            sidebarOverlay.addEventListener('click', toggleSidebar);
+        });
+    </script>
 
 </body>
 </html>
