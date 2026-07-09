@@ -34,6 +34,7 @@ CREATE TABLE IF NOT EXISTS `kehadiran` (
   `waktu_masuk` time NOT NULL,
   `waktu_keluar` time DEFAULT NULL, 
   `status` enum('Hadir','Sakit','Izin') NOT NULL,
+  `catatan` text DEFAULT NULL, -- Kolom baru untuk menampung isi logbook harian
   PRIMARY KEY (`id`),
   KEY `user_id` (`user_id`),
   CONSTRAINT `fk_user_kehadiran` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE ON UPDATE CASCADE
