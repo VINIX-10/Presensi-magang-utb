@@ -1,5 +1,6 @@
 <?php
 session_start();
+require 'koneksi.php'; // Memanggil koneksi database
 
 // 1. Cek apakah user sudah login
 if (!isset($_SESSION['nama_user'])) {
@@ -16,10 +17,41 @@ if (isset($_SESSION['last_activity']) && (time() - $_SESSION['last_activity']) >
     exit;
 }
 
-// 3. Perbarui waktu aktivitas terakhir agar 15 menit terhitung dari aksi terbaru
+// 3. Perbarui waktu aktivitas terakhir
 $_SESSION['last_activity'] = time();
-?>
 
+// 4. Ambil data User dari Database berdasarkan Session
+$user_id = $_SESSION['user_id'];
+$query_user = $conn->query("SELECT * FROM users WHERE id = '$user_id'");
+$user_data = $query_user->fetch_assoc();
+
+// 5. Proses saat tombol Submit Attendance ditekan
+$pesan_alert = "";
+if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['submit_absen'])) {
+    $status = $_POST['status'];
+    $waktu_masuk = $_POST['waktu_masuk'];
+    $tanggal = !empty($_POST['tanggal']) ? $_POST['tanggal'] : date('Y-m-d');
+    
+    // Cek apakah user sudah absen hari ini untuk mencegah absen ganda
+    $cek_absen = $conn->query("SELECT id FROM kehadiran WHERE user_id = '$user_id' AND tanggal = '$tanggal'");
+    
+    if ($cek_absen->num_rows == 0) {
+        $stmt = $conn->prepare("INSERT INTO kehadiran (user_id, status, waktu_masuk, tanggal) VALUES (?, ?, ?, ?)");
+        $stmt->bind_param("isss", $user_id, $status, $waktu_masuk, $tanggal);
+        if($stmt->execute()) {
+            $pesan_alert = "Absensi berhasil dicatat!";
+        } else {
+            $pesan_alert = "Gagal menyimpan absensi!";
+        }
+    } else {
+        $pesan_alert = "Anda sudah melakukan absensi hari ini!";
+    }
+}
+
+// 6. Hitung Statistik Absensi untuk Kartu Dashboard
+$stat_hadir = $conn->query("SELECT COUNT(id) as total FROM kehadiran WHERE user_id = '$user_id' AND status = 'Hadir'")->fetch_assoc()['total'];
+$stat_izin = $conn->query("SELECT COUNT(id) as total FROM kehadiran WHERE user_id = '$user_id' AND status IN ('Sakit', 'Izin')")->fetch_assoc()['total'];
+?>
 <!DOCTYPE html>
 <html lang="id">
 <head>
@@ -66,11 +98,11 @@ $_SESSION['last_activity'] = time();
                 <input type="text" placeholder="Search." class="w-full bg-gray-100 rounded-full py-2.5 pl-12 pr-4 text-sm focus:outline-none focus:ring-2 focus:ring-blue-100 transition">
                 <svg class="w-4 h-4 text-gray-400 absolute left-5 top-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
             </div>
-            <div class="flex items-center gap-4">
-                <button class="bg-blue-500 hover:bg-blue-600 text-white text-sm font-semibold py-2 px-5 rounded-full flex items-center gap-2 shadow-sm transition">
-                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
-                    Download Rekap
-                </button>
+           <div class="flex items-center gap-4">
+                <a href="export_excel.php" target="_blank" class="bg-blue-500 hover:bg-blue-600 text-white text-sm font-semibold py-2 px-5 rounded-full flex items-center gap-2 shadow-sm transition">
+                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
+                 Download Rekap
+                 </a>
             </div>
         </header>
 
@@ -79,15 +111,15 @@ $_SESSION['last_activity'] = time();
             <div class="glass-card rounded-3xl p-6 shadow-sm border border-white">
                 <h2 class="text-lg font-bold mb-5">Student Details</h2>
                 <div class="flex flex-wrap md:flex-nowrap items-center gap-6">
-                    <img src="https://ui-avatars.com/api/?name=Alvin+Nurfaiz&background=ebf4ff&color=2563eb&size=128" alt="Profile" class="w-20 h-20 rounded-full shadow-sm">
+                    <img src="https://ui-avatars.com/api/?name=<?php echo urlencode($user_data['nama_user']); ?>&background=ebf4ff&color=2563eb&size=128" alt="Profile" class="w-20 h-20 rounded-full shadow-sm">
                     <div class="grid grid-cols-2 md:grid-cols-4 gap-6 w-full text-sm">
                         <div>
                             <p class="text-gray-400 font-medium mb-1">Nama Mahasiswa</p>
-                            <p class="font-bold text-base">Alvin Nurfaiz</p>
+                            <p class="font-bold text-base"><?php echo htmlspecialchars($user_data['nama_user']); ?></p>
                         </div>
                         <div>
                             <p class="text-gray-400 font-medium mb-1">NIM / Kelas</p>
-                            <p class="font-bold text-base">232101111 / TiF RP 23 H</p>
+                            <p class="font-bold text-base"><?php echo htmlspecialchars($user_data['nim']); ?> / <?php echo htmlspecialchars($user_data['kelas']); ?></p>
                         </div>
                         <div>
                             <p class="text-gray-400 font-medium mb-1">Konsentrasi</p>
@@ -105,7 +137,7 @@ $_SESSION['last_activity'] = time();
                 <div class="bg-blue-500 text-white rounded-3xl p-6 shadow-lg shadow-blue-200 relative overflow-hidden">
                     <div class="relative z-10">
                         <p class="text-blue-100 font-medium text-sm mb-1">Total Attendance</p>
-                        <h3 class="text-4xl font-bold">0 <span class="text-lg font-medium text-blue-200">Days</span></h3>
+                        <h3 class="text-4xl font-bold"><?php echo $stat_hadir; ?> <span class="text-lg font-medium text-blue-200">Days</span></h3>
                     </div>
                 </div>
                 
@@ -119,7 +151,7 @@ $_SESSION['last_activity'] = time();
                 <div class="bg-amber-400 text-white rounded-3xl p-6 shadow-lg shadow-amber-200 relative overflow-hidden">
                     <div class="relative z-10">
                         <p class="text-amber-100 font-medium text-sm mb-1">Permit / Sick</p>
-                        <h3 class="text-4xl font-bold">0 <span class="text-lg font-medium text-amber-100">Days</span></h3>
+                        <h3 class="text-4xl font-bold"><?php echo $stat_izin; ?> <span class="text-lg font-medium text-amber-100">Days</span></h3>
                     </div>
                 </div>
 
@@ -143,32 +175,46 @@ $_SESSION['last_activity'] = time();
                 </div>
 
                 <div class="bg-white rounded-3xl p-6 shadow-sm border border-gray-100 flex flex-col justify-between">
-                    <div>
-                        <h2 class="text-lg font-bold mb-6">Action Today</h2>
-                        <div class="space-y-4">
-                            <div>
-                                <label class="block text-sm font-medium text-gray-500 mb-2">Status</label>
-                                <select class="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-blue-500">
-                                    <option>Hadir</option>
-                                    <option>Sakit</option>
-                                    <option>Izin</option>
-                                </select>
-                            </div>
+                    <form method="POST" action="">
+                        <div>
+                            <h2 class="text-lg font-bold mb-6">Action Today</h2>
+                             <div class="space-y-4">
+                                <div>
+                             <label class="block text-sm font-medium text-gray-500 mb-2">Tanggal</label>
+                             <input type="date" name="tanggal" value="<?php echo date('Y-m-d'); ?>" class="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-blue-500 text-gray-500" readonly>
+                                </div>
+            
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-500 mb-2">Status</label>
+                                    <select name="status" class="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-blue-500">
+                                        <option value="Hadir">Hadir</option>
+                                        <option value="Sakit">Sakit</option>
+                                        <option value="Izin">Izin</option>
+                                    </select>
+                                </div>
+            
                             <div>
                                 <label class="block text-sm font-medium text-gray-500 mb-2">Waktu Masuk</label>
-                                <input type="time" value="07:30" class="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-blue-500" readonly>
+                                <input type="time" name="waktu_masuk" value="<?php echo date('H:i'); ?>" class="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-blue-500" readonly>
                             </div>
                         </div>
-                    </div>
-                    <button class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3.5 rounded-xl shadow-lg shadow-blue-200 transition mt-6">
+                        </div>
+                        <button type="submit" name="submit_absen" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3.5 rounded-xl shadow-lg shadow-blue-200 transition mt-6">
                         Submit Attendance
                     </button>
+                    </form>
                 </div>
             </div>
         </div>
     </main>
 
     <script src="script.js"></script>
+
+    <?php if(!empty($pesan_alert)): ?>
+    <script>
+        alert("<?php echo $pesan_alert; ?>");
+    </script>
+    <?php endif; ?>
+
 </body>
 </html>
-

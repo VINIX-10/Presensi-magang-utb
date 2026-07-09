@@ -1,24 +1,38 @@
 <?php
 session_start();
+require 'koneksi.php'; // Baris ini berfungsi memanggil koneksi database
 
-// Jika sudah ada session aktif, langsung lempar ke dashboard (index.php)
+// Jika sudah ada session aktif, langsung lempar ke dashboard
 if (isset($_SESSION['nama_user'])) {
     header("Location: index.php");
     exit;
 }
 
-// Tangkap request jika tombol login ditekan
+$error_msg = ""; // Variabel untuk menampung pesan error
+
+// Tangkap request jika form disubmit
 if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     $user = $_POST['nama_user'];
     $pin = $_POST['pin'];
     
-    // Syarat login: PIN harus 4 digit (karena ini simulasi)
-    if (strlen($pin) == 4) {
-        $_SESSION['nama_user'] = $user;       // Simpan nama
-        $_SESSION['last_activity'] = time();  // Simpan waktu login (dalam detik)
+    // Cek kecocokan nama dan PIN langsung ke database (Tabel users)
+    $stmt = $conn->prepare("SELECT id, nama_user FROM users WHERE nama_user = ? AND pin = ?");
+    $stmt->bind_param("ss", $user, $pin);
+    $stmt->execute();
+    $result = $stmt->get_result();
+    
+    if ($result->num_rows > 0) {
+        // Jika data ditemukan di database
+        $row = $result->fetch_assoc();
+        $_SESSION['user_id'] = $row['id']; // Simpan ID untuk relasi absensi nanti
+        $_SESSION['nama_user'] = $row['nama_user'];
+        $_SESSION['last_activity'] = time();
         
         header("Location: index.php");
         exit;
+    } else {
+        // Simpan pesan error, jangan langsung di-echo di sini
+        $error_msg = "PIN salah atau user tidak ditemukan!";
     }
 }
 ?>
@@ -97,6 +111,12 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         </div>
 
     </div>
+
+    <?php if (!empty($error_msg)): ?>
+    <script>
+        alert("<?php echo $error_msg; ?>");
+    </script>
+    <?php endif; ?>
 
     <script>
         const stepSelect = document.getElementById('step-select-account');
