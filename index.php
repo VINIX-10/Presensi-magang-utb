@@ -1,54 +1,58 @@
 <?php
 session_start();
-require 'koneksi.php'; // Memanggil koneksi database
+require 'koneksi.php'; 
+date_default_timezone_set('Asia/Jakarta'); // Pastikan zona waktu benar
 
-// 1. Cek apakah user sudah login
 if (!isset($_SESSION['nama_user'])) {
-    header("Location: login.php"); // Jika belum, paksa pindah ke login
+    header("Location: login.php");
     exit;
 }
 
-// 2. Cek Timeout (15 Menit = 900 Detik)
 $timeout_duration = 900; 
 if (isset($_SESSION['last_activity']) && (time() - $_SESSION['last_activity']) > $timeout_duration) {
     session_unset();
     session_destroy();
-    header("Location: login.php"); // Jika lebih dari 15 menit, paksa login ulang
+    header("Location: login.php");
     exit;
 }
-
-// 3. Perbarui waktu aktivitas terakhir
 $_SESSION['last_activity'] = time();
 
-// 4. Ambil data User dari Database berdasarkan Session
 $user_id = $_SESSION['user_id'];
 $query_user = $conn->query("SELECT * FROM users WHERE id = '$user_id'");
 $user_data = $query_user->fetch_assoc();
 
-// 5. Proses saat tombol Submit Attendance ditekan
 $pesan_alert = "";
-if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['submit_absen'])) {
-    $status = $_POST['status'];
-    $waktu_masuk = $_POST['waktu_masuk'];
-    $tanggal = !empty($_POST['tanggal']) ? $_POST['tanggal'] : date('Y-m-d');
-    
-    // Cek apakah user sudah absen hari ini untuk mencegah absen ganda
-    $cek_absen = $conn->query("SELECT id FROM kehadiran WHERE user_id = '$user_id' AND tanggal = '$tanggal'");
-    
-    if ($cek_absen->num_rows == 0) {
-        $stmt = $conn->prepare("INSERT INTO kehadiran (user_id, status, waktu_masuk, tanggal) VALUES (?, ?, ?, ?)");
-        $stmt->bind_param("isss", $user_id, $status, $waktu_masuk, $tanggal);
-        if($stmt->execute()) {
-            $pesan_alert = "Absensi berhasil dicatat!";
-        } else {
-            $pesan_alert = "Gagal menyimpan absensi!";
+$tanggal_hari_ini = date('Y-m-d');
+$waktu_sekarang = date('H:i:s');
+
+// PROSES SUBMIT ABSEN (MASUK / PULANG)
+if ($_SERVER['REQUEST_METHOD'] == 'POST') {
+    if (isset($_POST['submit_masuk'])) {
+        $status = $_POST['status'];
+        
+        $cek_absen = $conn->query("SELECT id FROM kehadiran WHERE user_id = '$user_id' AND tanggal = '$tanggal_hari_ini'");
+        if ($cek_absen->num_rows == 0) {
+            $stmt = $conn->prepare("INSERT INTO kehadiran (user_id, tanggal, waktu_masuk, status) VALUES (?, ?, ?, ?)");
+            $stmt->bind_param("isss", $user_id, $tanggal_hari_ini, $waktu_sekarang, $status);
+            if($stmt->execute()) {
+                $pesan_alert = "Absen MASUK berhasil dicatat!";
+            } else {
+                $pesan_alert = "Gagal menyimpan absensi masuk!";
+            }
         }
-    } else {
-        $pesan_alert = "Anda sudah melakukan absensi hari ini!";
+    } elseif (isset($_POST['submit_pulang'])) {
+        $update = $conn->query("UPDATE kehadiran SET waktu_keluar = '$waktu_sekarang' WHERE user_id = '$user_id' AND tanggal = '$tanggal_hari_ini'");
+        if($update) {
+            $pesan_alert = "Absen PULANG berhasil dicatat! Selamat beristirahat.";
+        }
     }
 }
 
-// 6. Hitung Statistik Absensi untuk Kartu Dashboard
+// CEK STATUS ABSENSI HARI INI UNTUK TAMPILAN UI
+$query_absen_hari_ini = $conn->query("SELECT * FROM kehadiran WHERE user_id = '$user_id' AND tanggal = '$tanggal_hari_ini'");
+$data_absen_hari_ini = $query_absen_hari_ini->fetch_assoc();
+
+// STATISTIK KARTU
 $stat_hadir = $conn->query("SELECT COUNT(id) as total FROM kehadiran WHERE user_id = '$user_id' AND status = 'Hadir'")->fetch_assoc()['total'];
 $stat_izin = $conn->query("SELECT COUNT(id) as total FROM kehadiran WHERE user_id = '$user_id' AND status IN ('Sakit', 'Izin')")->fetch_assoc()['total'];
 ?>
@@ -105,9 +109,8 @@ $stat_izin = $conn->query("SELECT COUNT(id) as total FROM kehadiran WHERE user_i
                 <button id="mobileMenuBtn" class="md:hidden p-2 -ml-2 text-gray-600 hover:text-blue-600 focus:outline-none transition">
                     <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path></svg>
                 </button>
-                
                 <div class="relative w-full max-w-xs hidden sm:block">
-                    <input type="text" placeholder="Search." class="w-full bg-gray-100 rounded-full py-2.5 pl-12 pr-4 text-sm focus:outline-none focus:ring-2 focus:ring-blue-100 transition">
+                    <input type="text" placeholder="Cari data..." class="w-full bg-gray-100 rounded-full py-2.5 pl-12 pr-4 text-sm focus:outline-none focus:ring-2 focus:ring-blue-100 transition">
                     <svg class="w-4 h-4 text-gray-400 absolute left-5 top-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
                 </div>
             </div>
@@ -137,9 +140,9 @@ $stat_izin = $conn->query("SELECT COUNT(id) as total FROM kehadiran WHERE user_i
                             <p class="font-bold text-base"><?php echo htmlspecialchars($user_data['nim']); ?> / <?php echo htmlspecialchars($user_data['kelas']); ?></p>
                         </div>
                         <div>
-    <p class="text-gray-400 font-medium mb-1">Konsentrasi</p>
-    <p class="font-bold text-base"><?php echo htmlspecialchars($user_data['konsentrasi']); ?></p>
-</div>
+                            <p class="text-gray-400 font-medium mb-1">Konsentrasi</p>
+                            <p class="font-bold text-base"><?php echo htmlspecialchars($user_data['konsentrasi']); ?></p>
+                        </div>
                         <div>
                             <p class="text-gray-400 font-medium mb-1">Periode Magang</p>
                             <p class="font-bold text-base">8 Jul - 8 Okt 2026</p>
@@ -149,27 +152,25 @@ $stat_izin = $conn->query("SELECT COUNT(id) as total FROM kehadiran WHERE user_i
             </div>
 
             <div class="grid grid-cols-1 md:grid-cols-4 gap-4 md:gap-6">
+                <!-- KPI Cards ... (Tetap sama seperti sebelumnya) -->
                 <div class="bg-blue-500 text-white rounded-3xl p-6 shadow-lg shadow-blue-200 relative overflow-hidden">
                     <div class="relative z-10">
                         <p class="text-blue-100 font-medium text-sm mb-1">Total Attendance</p>
                         <h3 class="text-4xl font-bold"><?php echo $stat_hadir; ?> <span class="text-lg font-medium text-blue-200">Days</span></h3>
                     </div>
                 </div>
-                
                 <div class="bg-emerald-400 text-white rounded-3xl p-6 shadow-lg shadow-emerald-200 relative overflow-hidden">
                     <div class="relative z-10">
                         <p class="text-emerald-100 font-medium text-sm mb-1">Late Attendance</p>
                         <h3 class="text-4xl font-bold">0 <span class="text-lg font-medium text-emerald-100">Days</span></h3>
                     </div>
                 </div>
-
                 <div class="bg-amber-400 text-white rounded-3xl p-6 shadow-lg shadow-amber-200 relative overflow-hidden">
                     <div class="relative z-10">
                         <p class="text-amber-100 font-medium text-sm mb-1">Permit / Sick</p>
                         <h3 class="text-4xl font-bold"><?php echo $stat_izin; ?> <span class="text-lg font-medium text-amber-100">Days</span></h3>
                     </div>
                 </div>
-
                 <div class="bg-rose-400 text-white rounded-3xl p-6 shadow-lg shadow-rose-200 relative overflow-hidden">
                     <div class="relative z-10">
                         <p class="text-rose-100 font-medium text-sm mb-1">Remaining Days</p>
@@ -189,16 +190,18 @@ $stat_izin = $conn->query("SELECT COUNT(id) as total FROM kehadiran WHERE user_i
                     </div>
                 </div>
 
+                <!-- SMART ACTION BOX -->
                 <div class="bg-white rounded-3xl p-6 shadow-sm border border-gray-100 flex flex-col justify-between">
-                    <form method="POST" action="">
-                        <div>
-                            <h2 class="text-lg font-bold mb-6">Action Today</h2>
+                    <h2 class="text-lg font-bold mb-6">Action Today</h2>
+                    
+                    <?php if (!$data_absen_hari_ini): ?>
+                        <!-- KONDISI 1: Belum Absen Sama Sekali -->
+                        <form method="POST" action="">
                             <div class="space-y-4">
                                 <div>
                                     <label class="block text-sm font-medium text-gray-500 mb-2">Tanggal</label>
-                                    <input type="date" name="tanggal" value="<?php echo date('Y-m-d'); ?>" class="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-blue-500 text-gray-500" readonly>
+                                    <input type="text" value="<?php echo date('d M Y'); ?>" class="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 text-sm text-gray-500" readonly>
                                 </div>
-            
                                 <div>
                                     <label class="block text-sm font-medium text-gray-500 mb-2">Status</label>
                                     <select name="status" class="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-blue-500">
@@ -207,17 +210,43 @@ $stat_izin = $conn->query("SELECT COUNT(id) as total FROM kehadiran WHERE user_i
                                         <option value="Izin">Izin</option>
                                     </select>
                                 </div>
-            
-                                <div>
-                                    <label class="block text-sm font-medium text-gray-500 mb-2">Waktu Masuk</label>
-                                    <input type="time" name="waktu_masuk" value="<?php echo date('H:i'); ?>" class="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-blue-500" readonly>
-                                </div>
+                            </div>
+                            <button type="submit" name="submit_masuk" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3.5 rounded-xl shadow-lg shadow-blue-200 transition mt-6">
+                                Absen Masuk Sekarang
+                            </button>
+                        </form>
+
+                    <?php elseif (empty($data_absen_hari_ini['waktu_keluar'])): ?>
+                        <!-- KONDISI 2: Sudah Absen Masuk, Belum Absen Pulang -->
+                        <div class="text-center py-4">
+                            <div class="w-16 h-16 bg-blue-50 text-blue-500 rounded-full flex items-center justify-center mx-auto mb-4">
+                                <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                            </div>
+                            <p class="text-gray-500 font-medium">Kamu sudah absen masuk pada:</p>
+                            <h3 class="text-3xl font-bold text-gray-800 mt-1 mb-6"><?php echo date('H:i', strtotime($data_absen_hari_ini['waktu_masuk'])); ?></h3>
+                            
+                            <form method="POST" action="">
+                                <button type="submit" name="submit_pulang" class="w-full bg-rose-500 hover:bg-rose-600 text-white font-bold py-3.5 rounded-xl shadow-lg shadow-rose-200 transition">
+                                    Absen Pulang Sekarang
+                                </button>
+                            </form>
+                        </div>
+
+                    <?php else: ?>
+                        <!-- KONDISI 3: Sudah Absen Pulang (Selesai Hari Ini) -->
+                        <div class="text-center py-6">
+                            <div class="w-16 h-16 bg-emerald-50 text-emerald-500 rounded-full flex items-center justify-center mx-auto mb-4">
+                                <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                            </div>
+                            <h3 class="text-xl font-bold text-gray-800 mb-2">Tugas Selesai!</h3>
+                            <p class="text-gray-500 text-sm">Kamu sudah menyelesaikan absensi hari ini.</p>
+                            <div class="mt-6 flex justify-center gap-4 text-sm font-semibold">
+                                <div class="bg-gray-50 px-4 py-2 rounded-lg"><span class="text-gray-400 block text-xs">Masuk</span><?php echo date('H:i', strtotime($data_absen_hari_ini['waktu_masuk'])); ?></div>
+                                <div class="bg-gray-50 px-4 py-2 rounded-lg"><span class="text-gray-400 block text-xs">Pulang</span><?php echo date('H:i', strtotime($data_absen_hari_ini['waktu_keluar'])); ?></div>
                             </div>
                         </div>
-                        <button type="submit" name="submit_absen" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3.5 rounded-xl shadow-lg shadow-blue-200 transition mt-6">
-                            Submit Attendance
-                        </button>
-                    </form>
+                    <?php endif; ?>
+                    
                 </div>
             </div>
         </div>
@@ -232,16 +261,14 @@ $stat_izin = $conn->query("SELECT COUNT(id) as total FROM kehadiran WHERE user_i
             const closeSidebarBtn = document.getElementById('closeSidebarBtn');
             const sidebarOverlay = document.getElementById('sidebarOverlay');
 
-            // Fungsi untuk toggle (buka/tutup) sidebar
             const toggleSidebar = () => {
                 sidebar.classList.toggle('-translate-x-full');
                 sidebarOverlay.classList.toggle('hidden');
             };
 
-            // Event Listeners
             mobileMenuBtn.addEventListener('click', toggleSidebar);
             closeSidebarBtn.addEventListener('click', toggleSidebar);
-            sidebarOverlay.addEventListener('click', toggleSidebar); // Tutup jika klik area luar gelap
+            sidebarOverlay.addEventListener('click', toggleSidebar);
         });
     </script>
 
