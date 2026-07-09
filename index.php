@@ -137,9 +137,9 @@ $stat_izin = $conn->query("SELECT COUNT(id) as total FROM kehadiran WHERE user_i
                             <p class="font-bold text-base"><?php echo htmlspecialchars($user_data['nim']); ?> / <?php echo htmlspecialchars($user_data['kelas']); ?></p>
                         </div>
                         <div>
-                            <p class="text-gray-400 font-medium mb-1">Konsentrasi</p>
-                            <p class="font-bold text-base">Computer and Network Security</p>
-                        </div>
+    <p class="text-gray-400 font-medium mb-1">Konsentrasi</p>
+    <p class="font-bold text-base"><?php echo htmlspecialchars($user_data['konsentrasi']); ?></p>
+</div>
                         <div>
                             <p class="text-gray-400 font-medium mb-1">Periode Magang</p>
                             <p class="font-bold text-base">8 Jul - 8 Okt 2026</p>
