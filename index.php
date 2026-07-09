@@ -212,12 +212,12 @@ $stat_izin = $conn->query("SELECT COUNT(id) as total FROM kehadiran WHERE user_i
                                 </div>
                             </div>
                             <button type="submit" name="submit_masuk" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3.5 rounded-xl shadow-lg shadow-blue-200 transition mt-6">
-                                Absen Masuk Sekarang
+                                Kirim Laporan Hari Ini
                             </button>
                         </form>
 
-                    <?php elseif (empty($data_absen_hari_ini['waktu_keluar'])): ?>
-                        <!-- KONDISI 2: Sudah Absen Masuk, Belum Absen Pulang -->
+                    <?php elseif (empty($data_absen_hari_ini['waktu_keluar']) && $data_absen_hari_ini['status'] == 'Hadir'): ?>
+                        <!-- KONDISI 2: Hadir dan Belum Checkout -->
                         <div class="text-center py-4">
                             <div class="w-16 h-16 bg-blue-50 text-blue-500 rounded-full flex items-center justify-center mx-auto mb-4">
                                 <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
@@ -233,17 +233,31 @@ $stat_izin = $conn->query("SELECT COUNT(id) as total FROM kehadiran WHERE user_i
                         </div>
 
                     <?php else: ?>
-                        <!-- KONDISI 3: Sudah Absen Pulang (Selesai Hari Ini) -->
+                        <!-- KONDISI 3: Sudah Checkout ATAU Sedang Sakit/Izin -->
                         <div class="text-center py-6">
-                            <div class="w-16 h-16 bg-emerald-50 text-emerald-500 rounded-full flex items-center justify-center mx-auto mb-4">
-                                <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
-                            </div>
-                            <h3 class="text-xl font-bold text-gray-800 mb-2">Tugas Selesai!</h3>
-                            <p class="text-gray-500 text-sm">Kamu sudah menyelesaikan absensi hari ini.</p>
-                            <div class="mt-6 flex justify-center gap-4 text-sm font-semibold">
-                                <div class="bg-gray-50 px-4 py-2 rounded-lg"><span class="text-gray-400 block text-xs">Masuk</span><?php echo date('H:i', strtotime($data_absen_hari_ini['waktu_masuk'])); ?></div>
-                                <div class="bg-gray-50 px-4 py-2 rounded-lg"><span class="text-gray-400 block text-xs">Pulang</span><?php echo date('H:i', strtotime($data_absen_hari_ini['waktu_keluar'])); ?></div>
-                            </div>
+                            <?php if ($data_absen_hari_ini['status'] == 'Hadir'): ?>
+                                <!-- UI Jika Selesai Bekerja -->
+                                <div class="w-16 h-16 bg-emerald-50 text-emerald-500 rounded-full flex items-center justify-center mx-auto mb-4">
+                                    <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                                </div>
+                                <h3 class="text-xl font-bold text-gray-800 mb-2">Tugas Selesai!</h3>
+                                <p class="text-gray-500 text-sm">Kamu sudah menyelesaikan absensi hari ini.</p>
+                                <div class="mt-6 flex justify-center gap-4 text-sm font-semibold">
+                                    <div class="bg-gray-50 px-4 py-2 rounded-lg"><span class="text-gray-400 block text-xs">Masuk</span><?php echo date('H:i', strtotime($data_absen_hari_ini['waktu_masuk'])); ?></div>
+                                    <div class="bg-gray-50 px-4 py-2 rounded-lg"><span class="text-gray-400 block text-xs">Pulang</span><?php echo date('H:i', strtotime($data_absen_hari_ini['waktu_keluar'])); ?></div>
+                                </div>
+                            <?php else: ?>
+                                <!-- UI Jika Lapor Sakit / Izin -->
+                                <div class="w-16 h-16 bg-amber-50 text-amber-500 rounded-full flex items-center justify-center mx-auto mb-4">
+                                    <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                                </div>
+                                <h3 class="text-xl font-bold text-gray-800 mb-2">Status: <?php echo $data_absen_hari_ini['status']; ?></h3>
+                                <p class="text-gray-500 text-sm">Laporan ketidakhadiranmu hari ini sudah tercatat.</p>
+                                <div class="mt-6 inline-block bg-gray-50 px-4 py-2 rounded-lg text-sm font-semibold">
+                                    <span class="text-gray-400 block text-xs">Waktu Lapor</span>
+                                    <?php echo date('H:i', strtotime($data_absen_hari_ini['waktu_masuk'])); ?>
+                                </div>
+                            <?php endif; ?>
                         </div>
                     <?php endif; ?>
                     
