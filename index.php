@@ -62,13 +62,20 @@ $stat_izin = $conn->query("SELECT COUNT(id) as total FROM kehadiran WHERE user_i
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
-<body class="flex h-screen overflow-hidden text-gray-800">
+<body class="flex h-screen overflow-hidden text-gray-800 bg-[#F4F7FE]">
 
-    <aside class="w-64 bg-white border-r border-gray-100 flex flex-col justify-between hidden md:flex">
+    <div id="sidebarOverlay" class="fixed inset-0 bg-black/50 z-20 hidden md:hidden transition-opacity"></div>
+
+    <aside id="sidebar" class="fixed inset-y-0 left-0 z-30 w-64 bg-white border-r border-gray-100 flex flex-col justify-between transform -translate-x-full md:relative md:translate-x-0 transition-transform duration-300 ease-in-out">
         <div class="p-6">
-            <div class="flex items-center gap-3 mb-10 text-blue-600">
-                <svg class="w-8 h-8" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg>
-                <h1 class="text-xl font-bold tracking-wide">UTB Tracker</h1>
+            <div class="flex items-center justify-between mb-10">
+                <div class="flex items-center gap-3 text-blue-600">
+                    <svg class="w-8 h-8" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg>
+                    <h1 class="text-xl font-bold tracking-wide">UTB Tracker</h1>
+                </div>
+                <button id="closeSidebarBtn" class="md:hidden text-gray-400 hover:text-red-500 focus:outline-none">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                </button>
             </div>
             
             <p class="text-xs font-bold text-gray-400 mb-4 tracking-wider">MAIN MENU</p>
@@ -92,27 +99,35 @@ $stat_izin = $conn->query("SELECT COUNT(id) as total FROM kehadiran WHERE user_i
         </div>
     </aside>
 
-    <main class="flex-1 flex flex-col overflow-y-auto w-full">
-        <header class="bg-white/80 backdrop-blur-md px-8 py-4 flex justify-between items-center sticky top-0 z-10">
-            <div class="relative w-96">
-                <input type="text" placeholder="Search." class="w-full bg-gray-100 rounded-full py-2.5 pl-12 pr-4 text-sm focus:outline-none focus:ring-2 focus:ring-blue-100 transition">
-                <svg class="w-4 h-4 text-gray-400 absolute left-5 top-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
+    <main class="flex-1 flex flex-col overflow-y-auto w-full relative">
+        <header class="bg-white/80 backdrop-blur-md px-6 py-4 flex justify-between items-center sticky top-0 z-10 shadow-sm md:shadow-none md:border-b md:border-gray-100">
+            <div class="flex items-center gap-4 w-full md:w-auto">
+                <button id="mobileMenuBtn" class="md:hidden p-2 -ml-2 text-gray-600 hover:text-blue-600 focus:outline-none transition">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path></svg>
+                </button>
+                
+                <div class="relative w-full max-w-xs hidden sm:block">
+                    <input type="text" placeholder="Search." class="w-full bg-gray-100 rounded-full py-2.5 pl-12 pr-4 text-sm focus:outline-none focus:ring-2 focus:ring-blue-100 transition">
+                    <svg class="w-4 h-4 text-gray-400 absolute left-5 top-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
+                </div>
             </div>
-           <div class="flex items-center gap-4">
-                <a href="export_excel.php" target="_blank" class="bg-blue-500 hover:bg-blue-600 text-white text-sm font-semibold py-2 px-5 rounded-full flex items-center gap-2 shadow-sm transition">
-                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
-                 Download Rekap
-                 </a>
+            
+            <div class="flex items-center gap-4">
+                <a href="export_excel.php" target="_blank" class="bg-blue-500 hover:bg-blue-600 text-white text-sm font-semibold py-2 px-4 md:px-5 rounded-full flex items-center gap-2 shadow-sm transition">
+                    <svg class="w-4 h-4 hidden md:block" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
+                    <span class="md:hidden">Export</span>
+                    <span class="hidden md:inline">Download Rekap</span>
+                </a>
             </div>
         </header>
 
-        <div class="p-8 space-y-6">
+        <div class="p-4 md:p-8 space-y-6">
             
-            <div class="glass-card rounded-3xl p-6 shadow-sm border border-white">
+            <div class="bg-white/95 backdrop-blur-md rounded-3xl p-6 shadow-sm border border-white">
                 <h2 class="text-lg font-bold mb-5">Student Details</h2>
                 <div class="flex flex-wrap md:flex-nowrap items-center gap-6">
                     <img src="https://ui-avatars.com/api/?name=<?php echo urlencode($user_data['nama_user']); ?>&background=ebf4ff&color=2563eb&size=128" alt="Profile" class="w-20 h-20 rounded-full shadow-sm">
-                    <div class="grid grid-cols-2 md:grid-cols-4 gap-6 w-full text-sm">
+                    <div class="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6 w-full text-sm">
                         <div>
                             <p class="text-gray-400 font-medium mb-1">Nama Mahasiswa</p>
                             <p class="font-bold text-base"><?php echo htmlspecialchars($user_data['nama_user']); ?></p>
@@ -133,7 +148,7 @@ $stat_izin = $conn->query("SELECT COUNT(id) as total FROM kehadiran WHERE user_i
                 </div>
             </div>
 
-            <div class="grid grid-cols-1 md:grid-cols-4 gap-6">
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-4 md:gap-6">
                 <div class="bg-blue-500 text-white rounded-3xl p-6 shadow-lg shadow-blue-200 relative overflow-hidden">
                     <div class="relative z-10">
                         <p class="text-blue-100 font-medium text-sm mb-1">Total Attendance</p>
@@ -163,13 +178,13 @@ $stat_izin = $conn->query("SELECT COUNT(id) as total FROM kehadiran WHERE user_i
                 </div>
             </div>
 
-            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                <div class="glass-card rounded-3xl p-6 shadow-sm border border-white lg:col-span-2">
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-4 md:gap-6">
+                <div class="bg-white/95 backdrop-blur-md rounded-3xl p-6 shadow-sm border border-white lg:col-span-2">
                     <div class="flex justify-between items-center mb-6">
                         <h2 class="text-lg font-bold">Monthly Rate</h2>
                         <span class="bg-gray-100 text-gray-600 px-3 py-1 rounded-full text-xs font-bold">2026</span>
                     </div>
-                    <div class="h-64">
+                    <div class="h-64 relative w-full">
                         <canvas id="attendanceChart"></canvas>
                     </div>
                 </div>
@@ -178,10 +193,10 @@ $stat_izin = $conn->query("SELECT COUNT(id) as total FROM kehadiran WHERE user_i
                     <form method="POST" action="">
                         <div>
                             <h2 class="text-lg font-bold mb-6">Action Today</h2>
-                             <div class="space-y-4">
+                            <div class="space-y-4">
                                 <div>
-                             <label class="block text-sm font-medium text-gray-500 mb-2">Tanggal</label>
-                             <input type="date" name="tanggal" value="<?php echo date('Y-m-d'); ?>" class="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-blue-500 text-gray-500" readonly>
+                                    <label class="block text-sm font-medium text-gray-500 mb-2">Tanggal</label>
+                                    <input type="date" name="tanggal" value="<?php echo date('Y-m-d'); ?>" class="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-blue-500 text-gray-500" readonly>
                                 </div>
             
                                 <div>
@@ -193,15 +208,15 @@ $stat_izin = $conn->query("SELECT COUNT(id) as total FROM kehadiran WHERE user_i
                                     </select>
                                 </div>
             
-                            <div>
-                                <label class="block text-sm font-medium text-gray-500 mb-2">Waktu Masuk</label>
-                                <input type="time" name="waktu_masuk" value="<?php echo date('H:i'); ?>" class="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-blue-500" readonly>
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-500 mb-2">Waktu Masuk</label>
+                                    <input type="time" name="waktu_masuk" value="<?php echo date('H:i'); ?>" class="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-blue-500" readonly>
+                                </div>
                             </div>
                         </div>
-                        </div>
                         <button type="submit" name="submit_absen" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3.5 rounded-xl shadow-lg shadow-blue-200 transition mt-6">
-                        Submit Attendance
-                    </button>
+                            Submit Attendance
+                        </button>
                     </form>
                 </div>
             </div>
@@ -209,6 +224,26 @@ $stat_izin = $conn->query("SELECT COUNT(id) as total FROM kehadiran WHERE user_i
     </main>
 
     <script src="script.js"></script>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const sidebar = document.getElementById('sidebar');
+            const mobileMenuBtn = document.getElementById('mobileMenuBtn');
+            const closeSidebarBtn = document.getElementById('closeSidebarBtn');
+            const sidebarOverlay = document.getElementById('sidebarOverlay');
+
+            // Fungsi untuk toggle (buka/tutup) sidebar
+            const toggleSidebar = () => {
+                sidebar.classList.toggle('-translate-x-full');
+                sidebarOverlay.classList.toggle('hidden');
+            };
+
+            // Event Listeners
+            mobileMenuBtn.addEventListener('click', toggleSidebar);
+            closeSidebarBtn.addEventListener('click', toggleSidebar);
+            sidebarOverlay.addEventListener('click', toggleSidebar); // Tutup jika klik area luar gelap
+        });
+    </script>
 
     <?php if(!empty($pesan_alert)): ?>
     <script>
