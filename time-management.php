@@ -62,53 +62,11 @@ function hariIndo($tanggal) {
 </head>
 <body class="flex h-screen overflow-hidden text-gray-800 bg-[#F4F7FE]">
 
-    <div id="sidebarOverlay" class="fixed inset-0 bg-black/50 z-20 hidden md:hidden transition-opacity"></div>
-
-    <aside id="sidebar" class="fixed inset-y-0 left-0 z-30 w-64 bg-white border-r border-gray-100 flex flex-col justify-between transform -translate-x-full md:relative md:translate-x-0 transition-transform duration-300 ease-in-out">
-        <div class="p-6">
-            <div class="flex items-center justify-between mb-10">
-                <div class="flex items-center gap-3 text-blue-600">
-                    <svg class="w-8 h-8" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg>
-                    <h1 class="text-xl font-bold tracking-wide">UTB Tracker</h1>
-                </div>
-                <button id="closeSidebarBtn" class="md:hidden text-gray-400 hover:text-red-500">
-                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
-                </button>
-            </div>
-            
-            <p class="text-xs font-bold text-gray-400 mb-4 tracking-wider">MAIN MENU</p>
-            <nav class="space-y-2">
-                <a href="index.php" class="flex items-center gap-3 px-4 py-3 text-gray-500 hover:bg-gray-50 rounded-xl font-medium transition">
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"></path></svg>
-                    Dashboard
-                </a>
-                <a href="time-management.php" class="flex items-center gap-3 px-4 py-3 bg-blue-50 text-blue-600 rounded-xl font-semibold transition">
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
-                    Time Management
-                </a>
-            </nav>
-        </div>
-        <div class="p-6 border-t border-gray-100">
-            <a href="logout.php" class="flex items-center gap-3 px-4 py-3 text-red-500 hover:bg-red-50 rounded-xl font-medium transition group">
-                <svg class="w-5 h-5 transform group-hover:-translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"></path></svg>
-                Ganti Akun
-            </a>
-        </div>
-    </aside>
+    <?php include 'sidebar.php'; ?>
 
     <main class="flex-1 flex flex-col overflow-y-auto w-full relative">
-        <header class="bg-white/80 backdrop-blur-md px-6 py-4 flex justify-between items-center sticky top-0 z-10 shadow-sm md:shadow-none md:border-b md:border-gray-100">
-            <div class="flex items-center gap-4 w-full md:w-auto">
-                <button id="mobileMenuBtn" class="md:hidden p-2 -ml-2 text-gray-600 focus:outline-none">
-                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path></svg>
-                </button>
-                <h2 class="text-xl font-bold text-gray-800">Riwayat Kehadiran</h2>
-            </div>
-            <a href="export_excel.php" target="_blank" class="bg-blue-500 hover:bg-blue-600 text-white text-sm font-semibold py-2 px-4 md:px-5 rounded-full flex items-center gap-2 shadow-sm transition">
-                <span class="md:hidden">Export</span>
-                <span class="hidden md:inline">Export Log</span>
-            </a>
-        </header>
+        
+        <?php include 'topbar.php'; ?>
 
         <div class="p-4 md:p-8 space-y-6">
             <div class="flex flex-wrap md:flex-nowrap justify-between items-center gap-4 mb-2">
@@ -139,15 +97,23 @@ function hariIndo($tanggal) {
                                 while($row = $query_riwayat->fetch_assoc()): 
                                     $tgl_format = date('d M Y', strtotime($row['tanggal']));
                                     $hari = hariIndo($row['tanggal']);
-                                    $jam_masuk = date('H:i', strtotime($row['waktu_masuk']));
                                     
-                                    if (!empty($row['waktu_keluar'])) {
-                                        $jam_keluar_text = date('H:i', strtotime($row['waktu_keluar']));
-                                        $selisih = strtotime($row['waktu_keluar']) - strtotime($row['waktu_masuk']);
-                                        $total_jam = round($selisih / 3600, 1) . ' Jam';
+                                    // Logika Pintar untuk Hadir vs Sakit/Izin
+                                    if ($row['status'] == 'Hadir') {
+                                        $jam_masuk = date('H:i', strtotime($row['waktu_masuk']));
+                                        if (!empty($row['waktu_keluar'])) {
+                                            $jam_keluar_text = date('H:i', strtotime($row['waktu_keluar']));
+                                            $selisih = strtotime($row['waktu_keluar']) - strtotime($row['waktu_masuk']);
+                                            $total_jam = round($selisih / 3600, 1) . ' Jam';
+                                        } else {
+                                            $jam_keluar_text = '<span class="text-gray-400 italic">Belum Checkout</span>';
+                                            $total_jam = '-';
+                                        }
                                     } else {
-                                        $jam_keluar_text = 'Belum Checkout';
-                                        $total_jam = '-';
+                                        // Jika Sakit / Izin
+                                        $jam_masuk = date('H:i', strtotime($row['waktu_masuk'])); // Dianggap sebagai waktu lapor
+                                        $jam_keluar_text = '<span class="text-gray-300 font-bold">-</span>';
+                                        $total_jam = '<span class="text-gray-300 font-bold">-</span>';
                                     }
 
                                     $badge_class = "bg-blue-100 text-blue-700";
@@ -160,7 +126,7 @@ function hariIndo($tanggal) {
                                         <p class="text-xs text-gray-400"><?php echo $hari; ?></p>
                                     </td>
                                     <td class="py-4 px-6 font-medium text-gray-800"><?php echo $jam_masuk; ?></td>
-                                    <td class="py-4 px-6 font-medium text-gray-800"><?php echo (!empty($row['waktu_keluar'])) ? $jam_keluar_text : '<span class="text-gray-400">Belum Checkout</span>'; ?></td>
+                                    <td class="py-4 px-6 font-medium text-gray-800"><?php echo $jam_keluar_text; ?></td>
                                     <td class="py-4 px-6 font-medium text-gray-800"><?php echo $total_jam; ?></td>
                                     <td class="py-4 px-6">
                                         <span class="py-1 px-3 rounded-full text-xs font-bold <?php echo $badge_class; ?>">
@@ -172,7 +138,7 @@ function hariIndo($tanggal) {
                                             '<?php echo $row['id']; ?>', 
                                             '<?php echo $tgl_format; ?> (<?php echo $hari; ?>)', 
                                             '<?php echo $jam_masuk; ?>', 
-                                            '<?php echo (!empty($row['waktu_keluar'])) ? $jam_keluar_text : '-'; ?>', 
+                                            '<?php echo (!empty($row['waktu_keluar']) || $row['status'] != 'Hadir') ? strip_tags($jam_keluar_text) : '-'; ?>', 
                                             '<?php echo htmlspecialchars($row['catatan'] ?? ''); ?>'
                                         )" class="bg-blue-50 hover:bg-blue-100 text-blue-600 font-bold py-1.5 px-4 rounded-xl transition">
                                             Detail
@@ -243,9 +209,11 @@ function hariIndo($tanggal) {
                 sidebarOverlay.classList.toggle('hidden');
             };
 
-            mobileMenuBtn.addEventListener('click', toggleSidebar);
-            closeSidebarBtn.addEventListener('click', toggleSidebar);
-            sidebarOverlay.addEventListener('click', toggleSidebar);
+            if(mobileMenuBtn && closeSidebarBtn && sidebarOverlay) {
+                mobileMenuBtn.addEventListener('click', toggleSidebar);
+                closeSidebarBtn.addEventListener('click', toggleSidebar);
+                sidebarOverlay.addEventListener('click', toggleSidebar);
+            }
         });
 
         // Logika Buka/Tutup Jendela Modal Catatan
