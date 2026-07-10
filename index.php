@@ -1,4 +1,6 @@
-<?php require 'proses_dashboard.php'; ?>
+<?php
+// Memanggil file otak backend (Logika, Query, dan Pengecekan Sesi) 
+require 'proses_dashboard.php'; ?>
 <!DOCTYPE html>
 <html lang="id">
 
