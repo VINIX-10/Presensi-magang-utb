@@ -1,31 +1,13 @@
 <?php
-session_start();
-require 'koneksi.php';
-date_default_timezone_set('Asia/Jakarta');
+require 'sesi.php'; // Memanggil satpam sesi dan koneksi database sekaligus
 
-if (!isset($_SESSION['nama_user'])) {
-    header("Location: login.php");
-    exit;
-}
-
-$timeout_duration = 900;
-if (isset($_SESSION['last_activity']) && (time() - $_SESSION['last_activity']) > $timeout_duration) {
-    session_unset();
-    session_destroy();
-    header("Location: login.php");
-    exit;
-}
-$_SESSION['last_activity'] = time();
-
-$user_id = $_SESSION['user_id'];
+// AMBIL DATA USER
 $query_user = $conn->query("SELECT * FROM users WHERE id = '$user_id'");
 $user_data = $query_user->fetch_assoc();
 
 $pesan_alert = "";
 $tanggal_hari_ini = date('Y-m-d');
 $waktu_sekarang = date('H:i:s');
-
-// LOGIKA DETEKSI HARI LIBUR (1 = Senin ... 6 = Sabtu, 7 = Minggu)
 $hari_ini_angka = date('N');
 $is_weekend = ($hari_ini_angka >= 6) ? true : false;
 
