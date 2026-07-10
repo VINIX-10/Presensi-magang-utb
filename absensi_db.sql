@@ -33,7 +33,7 @@ CREATE TABLE IF NOT EXISTS `kehadiran` (
   `tanggal` date NOT NULL,
   `waktu_masuk` time NOT NULL,
   `waktu_keluar` time DEFAULT NULL, 
-  `status` enum('Hadir','Sakit','Izin') NOT NULL,
+  `status` enum('Hadir','Sakit','Izin','Lembur') NOT NULL,
   `catatan` text DEFAULT NULL, -- Kolom baru untuk menampung isi logbook harian
   PRIMARY KEY (`id`),
   KEY `user_id` (`user_id`),
