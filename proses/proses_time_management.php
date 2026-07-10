@@ -1,6 +1,6 @@
 <?php
 // 1. Panggil satpam sesi dan koneksi database
-require 'sesi.php';
+require_once __DIR__ . '/../config/sesi.php';
 
 $pesan_alert = "";
 

@@ -1,20 +1,21 @@
-<?php require 'proses_time_management.php'; ?>
+<?php require 'proses/proses_time_management.php'; ?>
 <!DOCTYPE html>
 <html lang="id">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Time Management - Absensi Magang</title>
-    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="assets/style.css">
     <script src="https://cdn.tailwindcss.com"></script>
 </head>
+
 <body class="flex h-screen overflow-hidden text-gray-800 bg-[#F4F7FE]">
 
-    <?php include 'sidebar.php'; ?>
+    <?php include 'components/sidebar.php'; ?>
 
     <main class="flex-1 flex flex-col overflow-y-auto w-full relative">
-        
-        <?php include 'topbar.php'; ?>
+        <?php include 'components/topbar.php'; ?>
 
         <div class="p-4 md:p-8 space-y-6">
             <div class="flex flex-wrap md:flex-nowrap justify-between items-center gap-4 mb-2">
@@ -40,12 +41,12 @@
                             </tr>
                         </thead>
                         <tbody class="text-sm">
-                            <?php 
+                            <?php
                             if ($query_riwayat->num_rows > 0) {
-                                while($row = $query_riwayat->fetch_assoc()): 
+                                while ($row = $query_riwayat->fetch_assoc()):
                                     $tgl_format = date('d M Y', strtotime($row['tanggal']));
                                     $hari = hariIndo($row['tanggal']);
-                                    
+
                                     // Logika Pintar untuk Hadir & Lembur vs Sakit & Izin
                                     if (in_array($row['status'], ['Hadir', 'Lembur'])) {
                                         $jam_masuk = date('H:i', strtotime($row['waktu_masuk']));
@@ -58,7 +59,7 @@
                                             $total_jam = '-';
                                         }
                                     } else {
-                                        $jam_masuk = date('H:i', strtotime($row['waktu_masuk'])); 
+                                        $jam_masuk = date('H:i', strtotime($row['waktu_masuk']));
                                         $jam_keluar_text = '<span class="text-gray-300 font-bold">-</span>';
                                         $total_jam = '<span class="text-gray-300 font-bold">-</span>';
                                     }
@@ -69,36 +70,38 @@
                                     if ($row['status'] == 'Sakit') $badge_class = "bg-amber-100 text-amber-700";
                                     if ($row['status'] == 'Izin') $badge_class = "bg-rose-100 text-rose-700";
                             ?>
-                                <tr class="border-b border-gray-50 hover:bg-gray-50 transition">
-                                    <td class="py-4 px-6">
-                                        <p class="font-bold text-gray-800"><?php echo $tgl_format; ?></p>
-                                        <p class="text-xs text-gray-400"><?php echo $hari; ?></p>
-                                    </td>
-                                    <td class="py-4 px-6 font-medium text-gray-800"><?php echo $jam_masuk; ?></td>
-                                    <td class="py-4 px-6 font-medium text-gray-800"><?php echo $jam_keluar_text; ?></td>
-                                    <td class="py-4 px-6 font-medium text-gray-800"><?php echo $total_jam; ?></td>
-                                    <td class="py-4 px-6">
-                                        <span class="py-1 px-3 rounded-full text-xs font-bold <?php echo $badge_class; ?>">
-                                            <?php echo htmlspecialchars($row['status']); ?>
-                                        </span>
-                                    </td>
-                                    <td class="py-4 px-6">
-                                        <button onclick="bukaModalLogbook(
+                                    <tr class="border-b border-gray-50 hover:bg-gray-50 transition">
+                                        <td class="py-4 px-6">
+                                            <p class="font-bold text-gray-800"><?php echo $tgl_format; ?></p>
+                                            <p class="text-xs text-gray-400"><?php echo $hari; ?></p>
+                                        </td>
+                                        <td class="py-4 px-6 font-medium text-gray-800"><?php echo $jam_masuk; ?></td>
+                                        <td class="py-4 px-6 font-medium text-gray-800"><?php echo $jam_keluar_text; ?></td>
+                                        <td class="py-4 px-6 font-medium text-gray-800"><?php echo $total_jam; ?></td>
+                                        <td class="py-4 px-6">
+                                            <span class="py-1 px-3 rounded-full text-xs font-bold <?php echo $badge_class; ?>">
+                                                <?php echo htmlspecialchars($row['status']); ?>
+                                            </span>
+                                        </td>
+                                        <td class="py-4 px-6">
+                                            <button onclick="bukaModalLogbook(
                                             '<?php echo $row['id']; ?>', 
                                             '<?php echo $tgl_format; ?> (<?php echo $hari; ?>)', 
                                             '<?php echo $jam_masuk; ?>', 
                                             '<?php echo (!empty($row['waktu_keluar']) || !in_array($row['status'], ['Hadir', 'Lembur'])) ? strip_tags($jam_keluar_text) : '-'; ?>', 
                                             '<?php echo htmlspecialchars($row['catatan'] ?? ''); ?>'
                                         )" class="bg-blue-50 hover:bg-blue-100 text-blue-600 font-bold py-1.5 px-4 rounded-xl transition">
-                                            Detail
-                                        </button>
-                                    </td>
-                                </tr>
-                            <?php 
-                                endwhile; 
+                                                Detail
+                                            </button>
+                                        </td>
+                                    </tr>
+                                <?php
+                                endwhile;
                             } else {
-                            ?>
-                                <tr><td colspan="6" class="py-8 text-center text-gray-400 font-medium">Belum ada data kehadiran.</td></tr>
+                                ?>
+                                <tr>
+                                    <td colspan="6" class="py-8 text-center text-gray-400 font-medium">Belum ada data kehadiran.</td>
+                                </tr>
                             <?php } ?>
                         </tbody>
                     </table>
@@ -112,11 +115,13 @@
 
     <div id="logbookModal" class="fixed inset-0 z-50 flex items-center justify-center hidden bg-black/50 p-4 backdrop-blur-sm transition-all">
         <div class="bg-white rounded-3xl w-full max-w-lg p-6 shadow-2xl border border-gray-100 transform transition-all scale-95 opacity-0 duration-300" id="modalBox">
-            
+
             <div class="flex justify-between items-center mb-6">
                 <h3 class="text-lg font-bold text-gray-800">Detail & Logbook Harian</h3>
                 <button onclick="tutupModalLogbook()" class="text-gray-400 hover:text-gray-600">
-                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                    </svg>
                 </button>
             </div>
 
@@ -157,7 +162,7 @@
                 sidebarOverlay.classList.toggle('hidden');
             };
 
-            if(mobileMenuBtn && closeSidebarBtn && sidebarOverlay) {
+            if (mobileMenuBtn && closeSidebarBtn && sidebarOverlay) {
                 mobileMenuBtn.addEventListener('click', toggleSidebar);
                 closeSidebarBtn.addEventListener('click', toggleSidebar);
                 sidebarOverlay.addEventListener('click', toggleSidebar);
@@ -190,9 +195,7 @@
         }
     </script>
 
-    <?php if(!empty($pesan_alert)): ?>
-    <script>alert("<?php echo $pesan_alert; ?>");</script>
-    <?php endif; ?>
-
+    <?php include 'components/alert.php'; ?>
 </body>
+
 </html>

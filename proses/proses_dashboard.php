@@ -1,6 +1,6 @@
 <?php
-// 1. Panggil satpam sesi (karena user pakai nama file sesi.php)
-require 'sesi.php'; 
+// Menggunakan __DIR__ agar path bersifat absolut dan anti-error saat di-include oleh index.php
+require_once __DIR__ . '/../config/sesi.php';
 
 // 2. Persiapan Data Dasar
 $pesan_alert = "";

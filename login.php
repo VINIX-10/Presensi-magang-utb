@@ -1,4 +1,4 @@
-<?php require 'proses_login.php'; ?>
+<?php require 'proses/proses_login.php'; ?>
 <!DOCTYPE html>
 <html lang="id">
 
@@ -6,7 +6,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Login - Absensi Magang</title>
-    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="assets/style.css">
     <script src="https://cdn.tailwindcss.com"></script>
 </head>
 
@@ -92,7 +92,7 @@
 
     </div>
 
-    <?php include 'alert.php'; ?>
+    <?php include 'components/alert.php'; ?>
 
     <script>
         const stepSelect = document.getElementById('step-select-account');

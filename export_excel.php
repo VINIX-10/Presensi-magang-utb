@@ -1,6 +1,6 @@
 <?php
-// Gunakan satpam sesi yang sudah kita rapikan sebelumnya
-require 'sesi.php';
+// Jalur absolut langsung masuk ke folder config dari halaman depan
+require_once __DIR__ . '/config/sesi.php';
 
 // 1. Ambil data informasi mahasiswa
 $query_user = $conn->query("SELECT * FROM users WHERE id = '$user_id'");

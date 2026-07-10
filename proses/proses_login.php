@@ -1,6 +1,6 @@
 <?php
 session_start();
-require 'koneksi.php';
+require_once __DIR__ . '/../config/koneksi.php';
 date_default_timezone_set('Asia/Jakarta');
 
 // Jika sudah ada session aktif, langsung lempar ke dashboard
