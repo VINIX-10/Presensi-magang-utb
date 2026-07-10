@@ -3,7 +3,7 @@ document.addEventListener("DOMContentLoaded", function() {
     // 1. Logika Hitung Mundur Sisa Magang
     function hitungSisaMagang() {
         const endDate = new Date('2026-10-08T00:00:00');
-        const today = new Date(); // Mengambil waktu sistem saat ini
+        const today = new Date(); 
         
         const diffTime = endDate - today;
         const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)); 
@@ -14,7 +14,7 @@ document.addEventListener("DOMContentLoaded", function() {
     
     hitungSisaMagang();
 
-    // 2. Konfigurasi Grafik (Chart.js)
+    // 2. Konfigurasi Grafik (Chart.js) Dinamis Terhubung Database
     const chartCanvas = document.getElementById('attendanceChart');
     if (chartCanvas) {
         const ctx = chartCanvas.getContext('2d');
@@ -22,13 +22,18 @@ document.addEventListener("DOMContentLoaded", function() {
         gradientBlue.addColorStop(0, 'rgba(59, 130, 246, 0.5)'); 
         gradientBlue.addColorStop(1, 'rgba(59, 130, 246, 0)');
 
+        // MEMOTONG DATA: 
+        // Mengambil data dari PHP (12 bulan), lalu memotongnya mulai index ke-6 (Juli) hingga batas index ke-10 (Oktober)
+        const dataMagang = typeof dataKehadiranBulanan !== 'undefined' ? dataKehadiranBulanan.slice(6, 10) : [0,0,0,0];
+
         new Chart(ctx, {
             type: 'line',
             data: {
-                labels: ['Jul', 'Aug', 'Sep', 'Oct'],
+                // Label disesuaikan HANYA untuk bulan magang
+                labels: ['Jul', 'Ags', 'Sep', 'Okt'], 
                 datasets: [{
-                    label: 'Attendance Rate (%)',
-                    data: [100, 95, 98, 100], // Data visual dummy
+                    label: 'Total Kehadiran (Hari)',
+                    data: dataMagang, 
                     borderColor: '#3b82f6',
                     backgroundColor: gradientBlue,
                     borderWidth: 3,
@@ -48,11 +53,9 @@ document.addEventListener("DOMContentLoaded", function() {
                 },
                 scales: {
                     y: {
-                        beginAtZero: false,
-                        min: 80,
-                        max: 100,
+                        beginAtZero: true, 
                         grid: { borderDash: [5, 5], color: '#f3f4f6' },
-                        ticks: { stepSize: 5 }
+                        ticks: { stepSize: 5 } 
                     },
                     x: {
                         grid: { display: false }
