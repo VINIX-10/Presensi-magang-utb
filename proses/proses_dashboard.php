@@ -52,4 +52,26 @@ $data_absen_hari_ini = $query_absen_hari_ini->fetch_assoc();
 // 6. HITUNG STATISTIK KARTU (KPI)
 $stat_hadir = $conn->query("SELECT COUNT(id) as total FROM kehadiran WHERE user_id = '$user_id' AND status IN ('Hadir', 'Lembur')")->fetch_assoc()['total'];
 $stat_izin = $conn->query("SELECT COUNT(id) as total FROM kehadiran WHERE user_id = '$user_id' AND status IN ('Sakit', 'Izin')")->fetch_assoc()['total'];
+
+
+// 7. AMBIL DATA UNTUK GRAFIK (CHART.JS) BULANAN
+$tahun_ini = '2026'; // Bisa diganti date('Y') jika ingin otomatis tahun berjalan
+$data_grafik_hadir = array_fill(1, 12, 0); // Siapkan array kosong untuk 12 bulan
+
+// Query menghitung total kehadiran (Hadir + Lembur) per bulan di tahun ini
+$query_grafik = $conn->query("
+    SELECT MONTH(tanggal) as bulan, COUNT(id) as total 
+    FROM kehadiran 
+    WHERE user_id = '$user_id' 
+    AND status IN ('Hadir', 'Lembur') 
+    AND YEAR(tanggal) = '$tahun_ini' 
+    GROUP BY MONTH(tanggal)
+");
+
+while ($row = $query_grafik->fetch_assoc()) {
+    $data_grafik_hadir[$row['bulan']] = (int)$row['total'];
+}
+
+// Konversi array PHP menjadi string JSON agar bisa dibaca oleh JavaScript
+$json_grafik_hadir = json_encode(array_values($data_grafik_hadir));
 ?>
