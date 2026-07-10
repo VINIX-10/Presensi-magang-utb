@@ -1,7 +1,7 @@
 <?php
 session_start();
 require 'koneksi.php';
-date_default_timezone_set('Asia/Jakarta'); // Pastikan zona waktu benar
+date_default_timezone_set('Asia/Jakarta');
 
 if (!isset($_SESSION['nama_user'])) {
     header("Location: login.php");
@@ -25,17 +25,22 @@ $pesan_alert = "";
 $tanggal_hari_ini = date('Y-m-d');
 $waktu_sekarang = date('H:i:s');
 
-// PROSES SUBMIT ABSEN (MASUK / PULANG)
+// LOGIKA DETEKSI HARI LIBUR (1 = Senin ... 6 = Sabtu, 7 = Minggu)
+$hari_ini_angka = date('N');
+$is_weekend = ($hari_ini_angka >= 6) ? true : false;
+
+// PROSES SUBMIT ABSEN (MASUK / PULANG / LEMBUR)
 if ($_SERVER['REQUEST_METHOD'] == 'POST') {
-    if (isset($_POST['submit_masuk'])) {
-        $status = $_POST['status'];
+    // Jika Submit Standar ATAU Submit Lembur
+    if (isset($_POST['submit_masuk']) || isset($_POST['submit_lembur'])) {
+        $status = isset($_POST['submit_lembur']) ? 'Lembur' : $_POST['status'];
 
         $cek_absen = $conn->query("SELECT id FROM kehadiran WHERE user_id = '$user_id' AND tanggal = '$tanggal_hari_ini'");
         if ($cek_absen->num_rows == 0) {
             $stmt = $conn->prepare("INSERT INTO kehadiran (user_id, tanggal, waktu_masuk, status) VALUES (?, ?, ?, ?)");
             $stmt->bind_param("isss", $user_id, $tanggal_hari_ini, $waktu_sekarang, $status);
             if ($stmt->execute()) {
-                $pesan_alert = "Absen MASUK berhasil dicatat!";
+                $pesan_alert = ($status == 'Lembur') ? "Selamat lembur! Semangat kerjanya." : "Absen MASUK berhasil dicatat!";
             } else {
                 $pesan_alert = "Gagal menyimpan absensi masuk!";
             }
@@ -48,12 +53,12 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     }
 }
 
-// CEK STATUS ABSENSI HARI INI UNTUK TAMPILAN UI
+// CEK STATUS ABSENSI HARI INI
 $query_absen_hari_ini = $conn->query("SELECT * FROM kehadiran WHERE user_id = '$user_id' AND tanggal = '$tanggal_hari_ini'");
 $data_absen_hari_ini = $query_absen_hari_ini->fetch_assoc();
 
-// STATISTIK KARTU
-$stat_hadir = $conn->query("SELECT COUNT(id) as total FROM kehadiran WHERE user_id = '$user_id' AND status = 'Hadir'")->fetch_assoc()['total'];
+// STATISTIK KARTU (Hadir & Lembur dihitung sebagai Total Attendance)
+$stat_hadir = $conn->query("SELECT COUNT(id) as total FROM kehadiran WHERE user_id = '$user_id' AND status IN ('Hadir', 'Lembur')")->fetch_assoc()['total'];
 $stat_izin = $conn->query("SELECT COUNT(id) as total FROM kehadiran WHERE user_id = '$user_id' AND status IN ('Sakit', 'Izin')")->fetch_assoc()['total'];
 ?>
 <!DOCTYPE html>
@@ -145,34 +150,54 @@ $stat_izin = $conn->query("SELECT COUNT(id) as total FROM kehadiran WHERE user_i
                     <h2 class="text-lg font-bold mb-6">Action Today</h2>
 
                     <?php if (!$data_absen_hari_ini): ?>
-                        <form method="POST" action="">
-                            <div class="space-y-4">
-                                <div>
-                                    <label class="block text-sm font-medium text-gray-500 mb-2">Tanggal</label>
-                                    <input type="text" value="<?php echo date('d M Y'); ?>" class="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 text-sm text-gray-500" readonly>
+                        
+                        <?php if ($is_weekend): ?>
+                            <div class="text-center py-4">
+                                <div class="w-16 h-16 bg-purple-50 text-purple-500 rounded-full flex items-center justify-center mx-auto mb-4">
+                                    <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z"></path></svg>
                                 </div>
-                                <div>
-                                    <label class="block text-sm font-medium text-gray-500 mb-2">Status</label>
-                                    <select name="status" class="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-blue-500">
-                                        <option value="Hadir">Hadir</option>
-                                        <option value="Sakit">Sakit</option>
-                                        <option value="Izin">Izin</option>
-                                    </select>
-                                </div>
+                                <h3 class="text-lg font-bold text-gray-800 mb-2">Yeay, Akhir Pekan!</h3>
+                                <p class="text-gray-500 text-sm mb-6">Hari ini libur magang. Selamat beristirahat dan nikmati waktumu.</p>
+                                
+                                <form method="POST" action="">
+                                    <button type="submit" name="submit_lembur" class="w-full bg-purple-600 hover:bg-purple-700 text-white font-bold py-3.5 rounded-xl shadow-lg shadow-purple-200 transition text-sm">
+                                        Saya Ada Jadwal Lembur
+                                    </button>
+                                </form>
                             </div>
-                            <button type="submit" name="submit_masuk" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3.5 rounded-xl shadow-lg shadow-blue-200 transition mt-6">
-                                Kirim Laporan Hari Ini
-                            </button>
-                        </form>
 
-                    <?php elseif (empty($data_absen_hari_ini['waktu_keluar']) && $data_absen_hari_ini['status'] == 'Hadir'): ?>
+                        <?php else: ?>
+                            <form method="POST" action="">
+                                <div class="space-y-4">
+                                    <div>
+                                        <label class="block text-sm font-medium text-gray-500 mb-2">Tanggal</label>
+                                        <input type="text" value="<?php echo date('d M Y'); ?>" class="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 text-sm text-gray-500" readonly>
+                                    </div>
+                                    <div>
+                                        <label class="block text-sm font-medium text-gray-500 mb-2">Status</label>
+                                        <select name="status" class="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-blue-500">
+                                            <option value="Hadir">Hadir</option>
+                                            <option value="Sakit">Sakit</option>
+                                            <option value="Izin">Izin</option>
+                                        </select>
+                                    </div>
+                                </div>
+                                <button type="submit" name="submit_masuk" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3.5 rounded-xl shadow-lg shadow-blue-200 transition mt-6">
+                                    Kirim Laporan Hari Ini
+                                </button>
+                            </form>
+                        <?php endif; ?>
+
+                    <?php elseif (empty($data_absen_hari_ini['waktu_keluar']) && in_array($data_absen_hari_ini['status'], ['Hadir', 'Lembur'])): ?>
                         <div class="text-center py-4">
-                            <div class="w-16 h-16 bg-blue-50 text-blue-500 rounded-full flex items-center justify-center mx-auto mb-4">
+                            <?php $tema_warna = ($data_absen_hari_ini['status'] == 'Lembur') ? 'purple' : 'blue'; ?>
+                            
+                            <div class="w-16 h-16 bg-<?php echo $tema_warna; ?>-50 text-<?php echo $tema_warna; ?>-500 rounded-full flex items-center justify-center mx-auto mb-4">
                                 <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
                                 </svg>
                             </div>
-                            <p class="text-gray-500 font-medium">Kamu sudah absen masuk pada:</p>
+                            <p class="text-gray-500 font-medium">Kamu sudah absen <?php echo strtolower($data_absen_hari_ini['status']); ?> pada:</p>
                             <h3 class="text-3xl font-bold text-gray-800 mt-1 mb-6"><?php echo date('H:i', strtotime($data_absen_hari_ini['waktu_masuk'])); ?></h3>
 
                             <form method="POST" action="">
@@ -184,7 +209,7 @@ $stat_izin = $conn->query("SELECT COUNT(id) as total FROM kehadiran WHERE user_i
 
                     <?php else: ?>
                         <div class="text-center py-6">
-                            <?php if ($data_absen_hari_ini['status'] == 'Hadir'): ?>
+                            <?php if (in_array($data_absen_hari_ini['status'], ['Hadir', 'Lembur'])): ?>
                                 <div class="w-16 h-16 bg-emerald-50 text-emerald-500 rounded-full flex items-center justify-center mx-auto mb-4">
                                     <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
@@ -218,7 +243,6 @@ $stat_izin = $conn->query("SELECT COUNT(id) as total FROM kehadiran WHERE user_i
     </main>
 
     <script src="script.js"></script>
-
     <script>
         document.addEventListener('DOMContentLoaded', () => {
             const sidebar = document.getElementById('sidebar');
@@ -240,11 +264,8 @@ $stat_izin = $conn->query("SELECT COUNT(id) as total FROM kehadiran WHERE user_i
     </script>
 
     <?php if (!empty($pesan_alert)): ?>
-        <script>
-            alert("<?php echo $pesan_alert; ?>");
-        </script>
+        <script>alert("<?php echo $pesan_alert; ?>");</script>
     <?php endif; ?>
 
 </body>
-
 </html>
