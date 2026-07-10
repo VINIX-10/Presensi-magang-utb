@@ -18,7 +18,7 @@ require 'proses_dashboard.php'; ?>
     <?php include 'sidebar.php'; ?>
 
     <main class="flex-1 flex flex-col overflow-y-auto w-full relative">
-        
+
         <?php include 'topbar.php'; ?>
 
         <div class="p-4 md:p-8 space-y-6">
@@ -90,15 +90,17 @@ require 'proses_dashboard.php'; ?>
                     <h2 class="text-lg font-bold mb-6">Action Today</h2>
 
                     <?php if (!$data_absen_hari_ini): ?>
-                        
+
                         <?php if ($is_weekend): ?>
                             <div class="text-center py-4">
                                 <div class="w-16 h-16 bg-purple-50 text-purple-500 rounded-full flex items-center justify-center mx-auto mb-4">
-                                    <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z"></path></svg>
+                                    <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z"></path>
+                                    </svg>
                                 </div>
                                 <h3 class="text-lg font-bold text-gray-800 mb-2">Yeay, Akhir Pekan!</h3>
                                 <p class="text-gray-500 text-sm mb-6">Hari ini libur magang. Selamat beristirahat dan nikmati waktumu.</p>
-                                
+
                                 <form method="POST" action="">
                                     <button type="submit" name="submit_lembur" class="w-full bg-purple-600 hover:bg-purple-700 text-white font-bold py-3.5 rounded-xl shadow-lg shadow-purple-200 transition text-sm">
                                         Saya Ada Jadwal Lembur
@@ -131,7 +133,7 @@ require 'proses_dashboard.php'; ?>
                     <?php elseif (empty($data_absen_hari_ini['waktu_keluar']) && in_array($data_absen_hari_ini['status'], ['Hadir', 'Lembur'])): ?>
                         <div class="text-center py-4">
                             <?php $tema_warna = ($data_absen_hari_ini['status'] == 'Lembur') ? 'purple' : 'blue'; ?>
-                            
+
                             <div class="w-16 h-16 bg-<?php echo $tema_warna; ?>-50 text-<?php echo $tema_warna; ?>-500 rounded-full flex items-center justify-center mx-auto mb-4">
                                 <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
@@ -195,7 +197,7 @@ require 'proses_dashboard.php'; ?>
                 sidebarOverlay.classList.toggle('hidden');
             };
 
-            if(mobileMenuBtn && closeSidebarBtn && sidebarOverlay) {
+            if (mobileMenuBtn && closeSidebarBtn && sidebarOverlay) {
                 mobileMenuBtn.addEventListener('click', toggleSidebar);
                 closeSidebarBtn.addEventListener('click', toggleSidebar);
                 sidebarOverlay.addEventListener('click', toggleSidebar);
@@ -203,9 +205,10 @@ require 'proses_dashboard.php'; ?>
         });
     </script>
 
-    <?php if (!empty($pesan_alert)): ?>
-        <script>alert("<?php echo $pesan_alert; ?>");</script>
-    <?php endif; ?>
+    <?php
+    // Memanggil file alert agar muncul notif pop up. 
+    include 'alert.php'; ?>
 
 </body>
+
 </html>
