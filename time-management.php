@@ -1,23 +1,5 @@
 <?php
-session_start();
-require 'koneksi.php'; 
-date_default_timezone_set('Asia/Jakarta');
-
-if (!isset($_SESSION['nama_user']) || !isset($_SESSION['user_id'])) {
-    header("Location: login.php");
-    exit;
-}
-
-$timeout_duration = 900; 
-if (isset($_SESSION['last_activity']) && (time() - $_SESSION['last_activity']) > $timeout_duration) {
-    session_unset();
-    session_destroy();
-    header("Location: login.php");
-    exit;
-}
-$_SESSION['last_activity'] = time();
-
-$user_id = $_SESSION['user_id'];
+require 'sesi.php';
 $pesan_alert = "";
 
 if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['simpan_logbook'])) {
@@ -34,7 +16,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['simpan_logbook'])) {
 
 $query_riwayat = $conn->query("SELECT * FROM kehadiran WHERE user_id = '$user_id' ORDER BY tanggal DESC");
 
-function hariIndo($tanggal) {
+function hariIndo(string $tanggal) {
     $hari_inggris = date('l', strtotime($tanggal));
     $daftar_hari = [
         'Sunday' => 'Minggu', 'Monday' => 'Senin', 'Tuesday' => 'Selasa',
