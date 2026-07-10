@@ -23,9 +23,18 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             $stmt = $conn->prepare("INSERT INTO kehadiran (user_id, tanggal, waktu_masuk, status) VALUES (?, ?, ?, ?)");
             $stmt->bind_param("isss", $user_id, $tanggal_hari_ini, $waktu_sekarang, $status);
             if ($stmt->execute()) {
-                $pesan_alert = ($status == 'Lembur') ? "Selamat lembur! Semangat kerjanya." : "Absen MASUK berhasil dicatat!";
+                // Logika Alert Cerdas berdasarkan Status
+                if ($status == 'Lembur') {
+                    $pesan_alert = "Semangat lembur! Waktu ekstra kamu sudah tercatat.";
+                } elseif ($status == 'Sakit') {
+                    $pesan_alert = "Laporan sakit diterima. Jangan lupa istirahat dan semoga lekas sembuh!";
+                } elseif ($status == 'Izin') {
+                    $pesan_alert = "Laporan izin berhasil dicatat. Semoga urusan hari ini dilancarkan!";
+                } else {
+                    $pesan_alert = "Mantap! Absen masuk berhasil dicatat. Selamat magang!";
+                }
             } else {
-                $pesan_alert = "Gagal menyimpan absensi masuk!";
+                $pesan_alert = "Gagal menyimpan laporan hari ini!";
             }
         }
     } elseif (isset($_POST['submit_pulang'])) {
