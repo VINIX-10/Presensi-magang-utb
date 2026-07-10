@@ -1,6 +1,6 @@
 <?php
 session_start();
-require 'koneksi.php'; // Baris ini berfungsi memanggil koneksi database
+require 'koneksi.php'; 
 
 // Jika sudah ada session aktif, langsung lempar ke dashboard
 if (isset($_SESSION['nama_user'])) {
@@ -8,31 +8,38 @@ if (isset($_SESSION['nama_user'])) {
     exit;
 }
 
-$error_msg = ""; // Variabel untuk menampung pesan error
+$pesan_alert = ""; // Disamakan dengan alert.php
 
 // Tangkap request jika form disubmit
 if ($_SERVER['REQUEST_METHOD'] == 'POST') {
-    $user = $_POST['nama_user'];
-    $pin = $_POST['pin'];
+    $user = trim($_POST['nama_user']);
+    $pin = trim($_POST['pin']);
     
-    // Cek kecocokan nama dan PIN langsung ke database (Tabel users)
-    $stmt = $conn->prepare("SELECT id, nama_user FROM users WHERE nama_user = ? AND pin = ?");
-    $stmt->bind_param("ss", $user, $pin);
+    // PENGAMANAN 1: Prepared Statements (Anti SQL Injection)
+    // Ambil kolom pin juga dari database untuk dicocokkan nanti
+    $stmt = $conn->prepare("SELECT id, nama_user, pin FROM users WHERE nama_user = ?");
+    $stmt->bind_param("s", $user);
     $stmt->execute();
     $result = $stmt->get_result();
     
     if ($result->num_rows > 0) {
-        // Jika data ditemukan di database
         $row = $result->fetch_assoc();
-        $_SESSION['user_id'] = $row['id']; // Simpan ID untuk relasi absensi nanti
-        $_SESSION['nama_user'] = $row['nama_user'];
-        $_SESSION['last_activity'] = time();
         
-        header("Location: index.php");
-        exit;
+        // PENGAMANAN 2: Verifikasi Hashing
+        // Mengecek apakah inputan (misal '1234') cocok dengan hash acak di database
+        if (password_verify($pin, $row['pin'])) {
+            
+            $_SESSION['user_id'] = $row['id']; 
+            $_SESSION['nama_user'] = $row['nama_user'];
+            $_SESSION['last_activity'] = time();
+            
+            header("Location: index.php");
+            exit;
+        } else {
+            $pesan_alert = "Gagal Login! PIN yang kamu masukkan salah.";
+        }
     } else {
-        // Simpan pesan error, jangan langsung di-echo di sini
-        $error_msg = "PIN salah atau user tidak ditemukan!";
+        $pesan_alert = "Gagal Login! User tidak ditemukan.";
     }
 }
 ?>
@@ -112,17 +119,13 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
 
     </div>
 
-    <?php if (!empty($error_msg)): ?>
-    <script>
-        alert("<?php echo $error_msg; ?>");
-    </script>
-    <?php endif; ?>
+    <?php include 'alert.php'; ?>
 
     <script>
         const stepSelect = document.getElementById('step-select-account');
         const stepPin = document.getElementById('step-pin-entry');
         const selectedNameLabel = document.getElementById('selected-name');
-        const inputNamaUser = document.getElementById('input-nama-user'); // Hidden input
+        const inputNamaUser = document.getElementById('input-nama-user'); 
         
         const pinInput = document.getElementById('real-pin-input');
         const dots = document.querySelectorAll('.pin-dot');
@@ -136,7 +139,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                 stepSelect.classList.add('hidden');
                 
                 selectedNameLabel.innerText = name;
-                inputNamaUser.value = name; // Masukkan nama ke form PHP
+                inputNamaUser.value = name; 
                 
                 stepPin.classList.remove('hidden');
                 setTimeout(() => {
@@ -195,10 +198,19 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
 
         function loginSimulasi() {
             if(pinInput.value.length === 4) {
-                // Submit form ke PHP, bukan lagi window.location manual
                 document.getElementById('form-login').submit();
             } else {
-                alert("Lengkapi 4 digit PIN!");
+                // Memunculkan SweetAlert untuk validasi frontend (Opsional, agar senada dengan backend)
+                if (typeof Swal !== 'undefined') {
+                    Swal.fire({
+                        icon: 'warning',
+                        title: 'Oops...',
+                        text: 'Lengkapi 4 digit PIN kamu!',
+                        confirmButtonColor: '#2563eb'
+                    });
+                } else {
+                    alert("Lengkapi 4 digit PIN!");
+                }
                 pinInput.focus();
             }
         }
