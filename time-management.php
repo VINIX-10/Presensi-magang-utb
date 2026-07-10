@@ -3,13 +3,11 @@ session_start();
 require 'koneksi.php'; 
 date_default_timezone_set('Asia/Jakarta');
 
-// 1. Cek apakah user sudah login
 if (!isset($_SESSION['nama_user']) || !isset($_SESSION['user_id'])) {
     header("Location: login.php");
     exit;
 }
 
-// 2. Cek Timeout
 $timeout_duration = 900; 
 if (isset($_SESSION['last_activity']) && (time() - $_SESSION['last_activity']) > $timeout_duration) {
     session_unset();
@@ -22,15 +20,11 @@ $_SESSION['last_activity'] = time();
 $user_id = $_SESSION['user_id'];
 $pesan_alert = "";
 
-// 3. PROSES SIMPAN CATATAN LOGBOOK (POST)
 if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['simpan_logbook'])) {
     $id_kehadiran = $_POST['id_kehadiran'];
     $catatan_kerja = $_POST['catatan_kerja'];
-    
-    // Keamanan ekstra: pastikan logbook yang diubah memang milik user yang login
     $stmt = $conn->prepare("UPDATE kehadiran SET catatan = ? WHERE id = ? AND user_id = ?");
     $stmt->bind_param("sii", $catatan_kerja, $id_kehadiran, $user_id);
-    
     if ($stmt->execute()) {
         $pesan_alert = "Logbook aktivitas berhasil diperbarui!";
     } else {
@@ -38,7 +32,6 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['simpan_logbook'])) {
     }
 }
 
-// Mengambil seluruh data kehadiran
 $query_riwayat = $conn->query("SELECT * FROM kehadiran WHERE user_id = '$user_id' ORDER BY tanggal DESC");
 
 function hariIndo($tanggal) {
@@ -98,8 +91,8 @@ function hariIndo($tanggal) {
                                     $tgl_format = date('d M Y', strtotime($row['tanggal']));
                                     $hari = hariIndo($row['tanggal']);
                                     
-                                    // Logika Pintar untuk Hadir vs Sakit/Izin
-                                    if ($row['status'] == 'Hadir') {
+                                    // Logika Pintar untuk Hadir & Lembur vs Sakit & Izin
+                                    if (in_array($row['status'], ['Hadir', 'Lembur'])) {
                                         $jam_masuk = date('H:i', strtotime($row['waktu_masuk']));
                                         if (!empty($row['waktu_keluar'])) {
                                             $jam_keluar_text = date('H:i', strtotime($row['waktu_keluar']));
@@ -110,13 +103,14 @@ function hariIndo($tanggal) {
                                             $total_jam = '-';
                                         }
                                     } else {
-                                        // Jika Sakit / Izin
-                                        $jam_masuk = date('H:i', strtotime($row['waktu_masuk'])); // Dianggap sebagai waktu lapor
+                                        $jam_masuk = date('H:i', strtotime($row['waktu_masuk'])); 
                                         $jam_keluar_text = '<span class="text-gray-300 font-bold">-</span>';
                                         $total_jam = '<span class="text-gray-300 font-bold">-</span>';
                                     }
 
+                                    // Sistem Pewarnaan Badge Status
                                     $badge_class = "bg-blue-100 text-blue-700";
+                                    if ($row['status'] == 'Lembur') $badge_class = "bg-purple-100 text-purple-700";
                                     if ($row['status'] == 'Sakit') $badge_class = "bg-amber-100 text-amber-700";
                                     if ($row['status'] == 'Izin') $badge_class = "bg-rose-100 text-rose-700";
                             ?>
@@ -138,7 +132,7 @@ function hariIndo($tanggal) {
                                             '<?php echo $row['id']; ?>', 
                                             '<?php echo $tgl_format; ?> (<?php echo $hari; ?>)', 
                                             '<?php echo $jam_masuk; ?>', 
-                                            '<?php echo (!empty($row['waktu_keluar']) || $row['status'] != 'Hadir') ? strip_tags($jam_keluar_text) : '-'; ?>', 
+                                            '<?php echo (!empty($row['waktu_keluar']) || !in_array($row['status'], ['Hadir', 'Lembur'])) ? strip_tags($jam_keluar_text) : '-'; ?>', 
                                             '<?php echo htmlspecialchars($row['catatan'] ?? ''); ?>'
                                         )" class="bg-blue-50 hover:bg-blue-100 text-blue-600 font-bold py-1.5 px-4 rounded-xl transition">
                                             Detail
@@ -197,7 +191,6 @@ function hariIndo($tanggal) {
     </div>
 
     <script>
-        // Logika Sidebar Mobile
         document.addEventListener('DOMContentLoaded', () => {
             const sidebar = document.getElementById('sidebar');
             const mobileMenuBtn = document.getElementById('mobileMenuBtn');
@@ -216,19 +209,16 @@ function hariIndo($tanggal) {
             }
         });
 
-        // Logika Buka/Tutup Jendela Modal Catatan
         const modal = document.getElementById('logbookModal');
         const modalBox = document.getElementById('modalBox');
 
         function bukaModalLogbook(id, tanggal, masuk, keluar, catatan) {
-            // Isi data ke dalam field modal
             document.getElementById('md-id').value = id;
             document.getElementById('md-tanggal').innerText = tanggal;
             document.getElementById('md-masuk').innerText = masuk;
             document.getElementById('md-keluar').innerText = keluar;
             document.getElementById('md-catatan').value = catatan;
 
-            // Efek transisi muncul
             modal.classList.remove('hidden');
             setTimeout(() => {
                 modalBox.classList.remove('scale-95', 'opacity-0');
