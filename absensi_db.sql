@@ -11,18 +11,17 @@ CREATE TABLE IF NOT EXISTS `users` (
   `nim` varchar(20) NOT NULL,
   `kelas` varchar(50) NOT NULL,
   `konsentrasi` varchar(100) NOT NULL,
-  `pin` varchar(4) NOT NULL,
+  `pin` varchar(255) NOT NULL, -- Diubah jadi 255 agar muat menampung kode Hash
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 -- --------------------------------------------------------
 -- 2. Memasukkan data awal (Default User) ke tabel `users`
--- Sesuai dengan tampilan di halaman login.php
--- PIN default diatur menjadi: 1234
+-- GANTI teks dalam kurung siku dengan hasil Hash dari generatormu!
 -- --------------------------------------------------------
 INSERT INTO `users` (`nama_user`, `nim`, `kelas`, `konsentrasi`, `pin`) VALUES
-('Alvin Nurfaiz', '232101111', 'TiF 23 CNS J', 'Computer and Network Security', '1234'),
-('M. Yusman Bayuga', '232101145', 'TiF 23 CiD G', 'Creative Interactive Design', '1234');
+('Alvin Nurfaiz', '232101111', 'TiF 23 CNS J', 'Computer and Network Security', '$2y$10$771J.TR8EnLcoC2arj3gM.POiqGua6aT8J/c2naogZ8xB8ptOeQkG'),
+('M. Yusman Bayuga', '232101145', 'TiF 23 CiD G', 'Creative Interactive Design', '$2y$10$771J.TR8EnLcoC2arj3gM.POiqGua6aT8J/c2naogZ8xB8ptOeQkG');
 
 -- --------------------------------------------------------
 -- 3. Struktur dari tabel `kehadiran`
@@ -34,7 +33,7 @@ CREATE TABLE IF NOT EXISTS `kehadiran` (
   `waktu_masuk` time NOT NULL,
   `waktu_keluar` time DEFAULT NULL, 
   `status` enum('Hadir','Sakit','Izin','Lembur') NOT NULL,
-  `catatan` text DEFAULT NULL, -- Kolom baru untuk menampung isi logbook harian
+  `catatan` text DEFAULT NULL, 
   PRIMARY KEY (`id`),
   KEY `user_id` (`user_id`),
   CONSTRAINT `fk_user_kehadiran` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE ON UPDATE CASCADE
