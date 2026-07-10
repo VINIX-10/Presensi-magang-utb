@@ -184,6 +184,10 @@ require 'proses/proses_dashboard.php'; ?>
         </div>
     </main>
 
+    <script>
+        const dataKehadiranBulanan = <?php echo isset($json_grafik_hadir) ? $json_grafik_hadir : '[0,0,0,0,0,0,0,0,0,0,0,0]'; ?>;
+    </script>
+
     <script src="assets/script.js"></script>
     <script>
         document.addEventListener('DOMContentLoaded', () => {
