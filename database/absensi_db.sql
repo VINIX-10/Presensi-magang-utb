@@ -25,7 +25,7 @@ CREATE TABLE IF NOT EXISTS `users` (
 -- --------------------------------------------------------
 INSERT INTO `users` (`nama_user`, `nim`, `kelas`, `konsentrasi`, `pin`, `failed_attempts`, `lockout_time`) VALUES
 ('Alvin Nurfaiz', '232101111', 'TiF 23 CNS J', 'Computer and Network Security', '$2y$10$771J.TR8EnLcoC2arj3gM.POiqGua6aT8J/c2naogZ8xB8ptOeQkG', 0, NULL),
-('M. Yusman Bayuga', '232101145', 'TiF 23 CiD G', 'Creative Interactive Design', '$2y$10$orR1RCVOL7zNpYyFX5uoPOzwmNWsBVjoYMuWFF4GAa8IQ3.nDA1SK', 0, NULL);
+('M. Yusman Bayuga', '232101145', 'TiF 23 CiD G', 'Creative Interactive Design', '2y$10$771J.TR8EnLcoC2arj3gM.POiqGua6aT8J/c2naogZ8xB8ptOeQkG', 0, NULL);
 
 -- --------------------------------------------------------
 -- 3. Struktur dari tabel `kehadiran`
