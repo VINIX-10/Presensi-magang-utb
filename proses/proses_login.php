@@ -37,6 +37,9 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             // 2. JIKA TIDAK DIBLOKIR, VERIFIKASI PIN
             if (password_verify($pin, $row['pin'])) {
 
+                // Menghancurkan session ID lama dan membuat yang baru yang sangat acak
+                session_regenerate_id(true);
+
                 // JIKA PIN BENAR: Reset failed_attempts menjadi 0 dan hapus lockout_time
                 $reset_stmt = $conn->prepare("UPDATE users SET failed_attempts = 0, lockout_time = NULL WHERE id = ?");
                 $reset_stmt->bind_param("i", $user_id_db);
@@ -76,4 +79,3 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         $pesan_alert = "Gagal Login! User tidak ditemukan.";
     }
 }
-?>
