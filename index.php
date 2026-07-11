@@ -102,6 +102,8 @@ require 'proses/proses_dashboard.php'; ?>
                                 <p class="text-gray-500 text-sm mb-6">Hari ini libur magang. Selamat beristirahat dan nikmati waktumu.</p>
 
                                 <form method="POST" action="">
+                                    <!-- INPUT CSRF TOKEN -->
+                                    <input type="hidden" name="csrf_token" value="<?php echo $_SESSION['csrf_token']; ?>">
                                     <button type="submit" name="submit_lembur" class="w-full bg-purple-600 hover:bg-purple-700 text-white font-bold py-3.5 rounded-xl shadow-lg shadow-purple-200 transition text-sm">
                                         Saya Ada Jadwal Lembur
                                     </button>
@@ -110,6 +112,8 @@ require 'proses/proses_dashboard.php'; ?>
 
                         <?php else: ?>
                             <form method="POST" action="">
+                                <!-- INPUT CSRF TOKEN -->
+                                 <input type="hidden" name="csrf_token" value="<?php echo $_SESSION['csrf_token']; ?>">
                                 <div class="space-y-4">
                                     <div>
                                         <label class="block text-sm font-medium text-gray-500 mb-2">Tanggal</label>
@@ -143,6 +147,8 @@ require 'proses/proses_dashboard.php'; ?>
                             <h3 class="text-3xl font-bold text-gray-800 mt-1 mb-6"><?php echo date('H:i', strtotime($data_absen_hari_ini['waktu_masuk'])); ?></h3>
 
                             <form method="POST" action="">
+                                <!-- INPUT CSRF TOKEN -->
+                                 <input type="hidden" name="csrf_token" value="<?php echo $_SESSION['csrf_token']; ?>">
                                 <button type="submit" name="submit_pulang" class="w-full bg-rose-500 hover:bg-rose-600 text-white font-bold py-3.5 rounded-xl shadow-lg shadow-rose-200 transition">
                                     Absen Pulang Sekarang
                                 </button>
