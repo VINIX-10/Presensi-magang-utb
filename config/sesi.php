@@ -1,6 +1,11 @@
 <?php
 session_start();
 
+// Pabrik CSRF Token: Buat token acak jika belum ada di sesi ini
+if (empty($_SESSION['csrf_token'])) {
+    $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
+}
+
 // Memaksa browser membuang cache agar tombol 'Back' memuat ulang halaman ke server
 header("Cache-Control: no-store, no-cache, must-revalidate, max-age=0");
 header("Cache-Control: post-check=0, pre-check=0", false);
