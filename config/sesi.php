@@ -1,5 +1,12 @@
 <?php
 session_start();
+
+// Memaksa browser membuang cache agar tombol 'Back' memuat ulang halaman ke server
+header("Cache-Control: no-store, no-cache, must-revalidate, max-age=0");
+header("Cache-Control: post-check=0, pre-check=0", false);
+header("Pragma: no-cache");
+header("Expires: 0");
+// ----------------------------------
 require 'koneksi.php'; 
 date_default_timezone_set('Asia/Jakarta'); // Pastikan zona waktu benar
 
