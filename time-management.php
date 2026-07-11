@@ -132,6 +132,8 @@
             </div>
 
             <form method="POST" action="">
+                <!-- INPUT CSRF TOKEN -->
+                <input type="hidden" name="csrf_token" value="<?php echo $_SESSION['csrf_token']; ?>">
                 <input type="hidden" name="id_kehadiran" id="md-id">
                 <div class="mb-5">
                     <label class="block text-sm font-semibold text-gray-500 mb-2">Catatan Aktivitas / Kegiatan Magang</label>
