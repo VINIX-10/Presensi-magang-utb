@@ -334,11 +334,32 @@ require 'proses/proses_dashboard.php'; ?>
         const dataKehadiranBulanan = <?php echo isset($json_grafik_hadir) ? $json_grafik_hadir : '[0,0,0,0,0,0,0,0,0,0,0,0]'; ?>;
     </script>
 
-    <!-- Cache Busting agar update script.js langsung terbaca -->
+   <!-- Cache Busting agar update script.js langsung terbaca -->
     <script src="assets/script.js?v=<?php echo time(); ?>"></script>
 
     <script>
-        // Memperbaiki modal script agar membawa parameter ID
+        // --- 1. SCRIPT SIDEBAR MOBILE (HAMBURGER MENU) ---
+        document.addEventListener('DOMContentLoaded', () => {
+            const sidebar = document.getElementById('sidebar');
+            const mobileMenuBtn = document.getElementById('mobileMenuBtn');
+            const closeSidebarBtn = document.getElementById('closeSidebarBtn');
+            const sidebarOverlay = document.getElementById('sidebarOverlay');
+
+            const toggleSidebar = () => {
+                if(sidebar && sidebarOverlay) {
+                    sidebar.classList.toggle('-translate-x-full');
+                    sidebarOverlay.classList.toggle('hidden');
+                }
+            };
+
+            if (mobileMenuBtn && closeSidebarBtn && sidebarOverlay) {
+                mobileMenuBtn.addEventListener('click', toggleSidebar);
+                closeSidebarBtn.addEventListener('click', toggleSidebar);
+                sidebarOverlay.addEventListener('click', toggleSidebar);
+            }
+        });
+
+        // --- 2. SCRIPT MODAL LOGBOOK ---
         function openModalLogbook(id, tanggal, status, catatan) {
             const modal = document.getElementById('logbookModal');
             const content = document.getElementById('modalContent');
@@ -379,5 +400,4 @@ require 'proses/proses_dashboard.php'; ?>
     <?php include 'components/alert.php'; ?>
 
 </body>
-
 </html>
