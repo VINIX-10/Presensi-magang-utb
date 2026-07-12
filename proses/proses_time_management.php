@@ -6,13 +6,14 @@ $pesan_alert = "";
 
 // 2. PROSES SIMPAN CATATAN LOGBOOK (POST)
 if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['simpan_logbook'])) {
-    // SATPAM CSRF: Periksa apakah token dikirim dan cocok dengan yang ada di server
+    
+    // SATPAM CSRF: Periksa apakah token dikirim dan cocok dengan yang ada di server (Fitur Keamanan Teman)
     if (!isset($_POST['csrf_token']) || $_POST['csrf_token'] !== $_SESSION['csrf_token']) {
         die("Error 403: CSRF Token Invalid! Terdeteksi aktivitas mencurigakan.");
     }
     $id_kehadiran = $_POST['id_kehadiran'];
 
-    // XSS ARMOR: Mengubah tag HTML/Javascript menjadi teks biasa sebelum masuk Database
+    // XSS ARMOR: Mengubah tag HTML/Javascript menjadi teks biasa sebelum masuk Database (Fitur Keamanan Teman)
     $catatan_kerja = htmlspecialchars($_POST['catatan_kerja'], ENT_QUOTES, 'UTF-8');
 
     // Keamanan ekstra: pastikan logbook yang diubah memang milik user yang login
