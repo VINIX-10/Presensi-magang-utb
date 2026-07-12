@@ -1,26 +1,4 @@
-<?php require 'proses/proses_time_management.php'; 
-
-// Mendapatkan bulan aktif dari URL parameter, default ke Juli (07) 2026
-$bulan_aktif = isset($_GET['bulan']) ? sprintf('%02d', $_GET['bulan']) : '07';
-$tahun_aktif = '2026';
-
-// Konfigurasi nama bulan Indonesia
-$nama_bulan_indo = [
-    '07' => 'Juli 2026',
-    '08' => 'Agustus 2026',
-    '09' => 'September 2026',
-    '10' => 'Oktober 2026'
-];
-
-// LOGIKA MATEMATIKA KALENDER NYATA (2026)
-// 1. Dapatkan total hari dalam bulan terpilih (misal: Juli = 31 hari, September = 30 hari)
-$total_hari = date('t', strtotime("$tahun_aktif-$bulan_aktif-01"));
-
-// 2. Dapatkan hari pertama di bulan tersebut (1 = Senin, 7 = Minggu)
-$hari_pertama = date('N', strtotime("$tahun_aktif-$bulan_aktif-01"));
-
-// 3. Hitung jumlah kotak kosong yang harus dirender sebelum tanggal 1
-$slot_kosong = $hari_pertama - 1; 
+<?php require 'proses/proses_time_management.php';
 ?>
 <!DOCTYPE html>
 <html lang="id">
