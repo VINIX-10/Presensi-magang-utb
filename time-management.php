@@ -1,4 +1,6 @@
-<?php require 'proses/proses_time_management.php';
+<?php 
+// Memanggil otak backend hasil "wiretuck"
+require 'proses/proses_time_management.php'; 
 ?>
 <!DOCTYPE html>
 <html lang="id">
@@ -58,6 +60,7 @@
                         <div class="py-2">SEN</div><div class="py-2">SEL</div><div class="py-2">RAB</div><div class="py-2">KAM</div><div class="py-2">JUM</div><div class="py-2 text-rose-400">SAB</div><div class="py-2 text-rose-400">MIN</div>
                     </div>
 
+                    <!-- BAGIAN RENDER KALENDER (FULL DINAMIS DARI DATABASE) -->
                     <div class="grid grid-cols-7 gap-2">
                         
                         <?php for($i = 0; $i < $slot_kosong; $i++): ?>
@@ -65,85 +68,80 @@
                         <?php endfor; ?>
 
                         <?php for($d = 1; $d <= $total_hari; $d++): 
-                            // Membuat format tanggal penuh YYYY-MM-DD untuk integrasi database / CRUD
                             $tanggal_format = sprintf('%04d-%02d-%02d', $tahun_aktif, $bulan_aktif, $d);
                             
-                            // Contoh Integrasi Tampilan Agenda Khusus Sampel Bulan Juli
-                            if ($bulan_aktif == '07' && $d == 8): ?>
-                                <div class="min-h-[90px] bg-white border-2 border-emerald-400 shadow-sm rounded-2xl p-2 flex flex-col justify-between cursor-pointer hover:shadow transition" 
-                                     onclick="bukaModalCRUD('edit', '1', 'Onboarding Industri', 'Industri', '2026-07-08', 'Hari Pertama Magang & Onboarding Perusahaan')">
-                                    <span class="font-bold text-sm text-emerald-600">8</span>
-                                    <span class="bg-emerald-50 text-emerald-700 text-[10px] font-bold py-1 px-1.5 rounded-lg block truncate">🏢 Onboarding</span>
-                                </div>
-                            <?php elseif ($bulan_aktif == '07' && $d == 10): ?>
-                                <div class="min-h-[90px] bg-white border-2 border-blue-400 shadow-sm rounded-2xl p-2 flex flex-col justify-between cursor-pointer hover:shadow transition" 
-                                     onclick="bukaModalCRUD('edit', '2', 'Sosialisasi Kampus', 'Kampus', '2026-07-10', 'Acara sosialisasi mahasiswa magang kampus')">
-                                    <span class="font-bold text-sm text-blue-600">10</span>
-                                    <span class="bg-blue-50 text-blue-700 text-[10px] font-bold py-1 px-1.5 rounded-lg block truncate">🎓 Sosialisasi</span>
-                                </div>
-                            <?php else: ?>
-                                <div class="min-h-[90px] bg-white border border-gray-100 rounded-2xl p-2 relative flex flex-col justify-between hover:border-blue-300 transition cursor-pointer"
-                                     onclick="bukaModalCRUD('create', '', '', 'Industri', '<?= $tanggal_format; ?>', '')">
-                                    <span class="font-bold text-sm text-gray-400"><?= $d; ?></span>
-                                </div>
-                            <?php endif; ?>
+                            // Mengecek apakah di tanggal ini ada data yang terdaftar di database
+                            if (isset($agenda_list[$d])): 
+                                $agenda = $agenda_list[$d];
+                                
+                                // Pewarnaan dinamis
+                                $warna = 'gray'; $icon = '📌';
+                                if ($agenda['kategori'] == 'Industri') { $warna = 'emerald'; $icon = '🏢'; }
+                                elseif ($agenda['kategori'] == 'Kampus') { $warna = 'blue'; $icon = '🎓'; }
+                                elseif ($agenda['kategori'] == 'Lembur') { $warna = 'purple'; $icon = '🌙'; }
+                        ?>
+                            <!-- Jika ada agenda, tampilkan kotak berwarna -->
+                            <div class="min-h-[90px] bg-white border-2 border-<?= $warna; ?>-400 shadow-sm rounded-2xl p-2 flex flex-col justify-between cursor-pointer hover:shadow transition" 
+                                 onclick="bukaModalCRUD('edit', '<?= $agenda['id']; ?>', '<?= addslashes($agenda['judul']); ?>', '<?= $agenda['kategori']; ?>', '<?= $agenda['tanggal']; ?>', '<?= addslashes($agenda['deskripsi']); ?>')">
+                                <span class="font-bold text-sm text-<?= $warna; ?>-600"><?= $d; ?></span>
+                                <span class="bg-<?= $warna; ?>-50 text-<?= $warna; ?>-700 text-[10px] font-bold py-1 px-1.5 rounded-lg block truncate"><?= $icon; ?> <?= htmlspecialchars($agenda['judul']); ?></span>
+                            </div>
+
+                        <?php else: ?>
+                            <!-- Jika kosong, tampilkan kotak polos yang bisa diklik untuk tambah agenda -->
+                            <div class="min-h-[90px] bg-white border border-gray-100 rounded-2xl p-2 relative flex flex-col justify-between hover:border-blue-300 transition cursor-pointer"
+                                 onclick="bukaModalCRUD('create', '', '', 'Industri', '<?= $tanggal_format; ?>', '')">
+                                <span class="font-bold text-sm text-gray-400"><?= $d; ?></span>
+                            </div>
+                        <?php endif; ?>
+                        
                         <?php endfor; ?>
                     </div>
                 </div>
 
+                <!-- TARGET MILESTONE (Statis) -->
                 <div class="bg-white rounded-3xl p-6 shadow-sm border border-gray-100">
-    <h2 class="text-lg font-bold text-gray-800 mb-6">Target Milestone Magang</h2>
-    
-    <div class="relative pl-6 border-l-2 border-gray-100 space-y-8">
-        
-        <div class="relative">
-            <span class="absolute -left-[33px] top-0 bg-emerald-500 text-white p-1 rounded-full border-4 border-white">
-                <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"></path></svg>
-            </span>
-            <h3 class="font-bold text-sm text-gray-800">Milestone 1 (Juli)</h3>
-            <p class="text-xs text-emerald-600 font-semibold mb-1">Status: Selesai</p>
-            <div class="text-xs text-gray-500 space-y-1 bg-gray-50 p-2.5 rounded-xl mt-1">
-                <p><strong>Operasional:</strong> Penginputan & rekapitulasi data harian finansial (Tabungan, Giro, Depo) Uker Sumedang ke Excel.</p>
-                <p><strong>Inisiatif IT:</strong> Analisis kelemahan sistem absen fisik pemagang & perancangan basis data Tracker.</p>
-            </div>
-        </div>
+                    <h2 class="text-lg font-bold text-gray-800 mb-6">Target Milestone Magang</h2>
+                    <div class="relative pl-6 border-l-2 border-gray-100 space-y-8">
+                        <div class="relative">
+                            <span class="absolute -left-[33px] top-0 bg-emerald-500 text-white p-1 rounded-full border-4 border-white">
+                                <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"></path></svg>
+                            </span>
+                            <h3 class="font-bold text-sm text-gray-800">Milestone 1 (Juli)</h3>
+                            <p class="text-xs text-emerald-600 font-semibold mb-1">Status: Selesai</p>
+                            <div class="text-xs text-gray-500 space-y-1 bg-gray-50 p-2.5 rounded-xl mt-1">
+                                <p><strong>Operasional:</strong> Penginputan & rekapitulasi data harian finansial (Tabungan, Giro, Depo) Uker Sumedang ke Excel.</p>
+                                <p><strong>Inisiatif IT:</strong> Analisis kelemahan sistem absen fisik pemagang & perancangan basis data Tracker.</p>
+                            </div>
+                        </div>
 
-        <div class="relative">
-            <span class="absolute -left-[30px] top-0 bg-blue-600 w-4 h-4 rounded-full border-4 border-white animate-pulse"></span>
-            <h3 class="font-bold text-sm text-gray-800">Milestone 2 (Agustus)</h3>
-            <p class="text-xs text-blue-600 font-semibold mb-1">Status: Berjalan</p>
-            <div class="text-xs text-gray-500 space-y-1 bg-gray-50 p-2.5 rounded-xl mt-1">
-                <p><strong>Operasional:</strong> Monitoring akuisisi produk digital (Brimo, Qlola, QRIS) dan validasi leads Brispot.</p>
-                <p><strong>Inisiatif IT:</strong> Desain UI/UX dashboard desktop serta sinkronisasi penataan kolom logbook agar sesuai output Excel.</p>
-            </div>
-        </div>
+                        <div class="relative">
+                            <span class="absolute -left-[30px] top-0 bg-blue-600 w-4 h-4 rounded-full border-4 border-white animate-pulse"></span>
+                            <h3 class="font-bold text-sm text-gray-800">Milestone 2 (Agustus)</h3>
+                            <p class="text-xs text-blue-600 font-semibold mb-1">Status: Berjalan</p>
+                            <div class="text-xs text-gray-500 space-y-1 bg-gray-50 p-2.5 rounded-xl mt-1">
+                                <p><strong>Operasional:</strong> Monitoring akuisisi produk digital (Brimo, Qlola, QRIS) dan validasi leads Brispot.</p>
+                                <p><strong>Inisiatif IT:</strong> Desain UI/UX dashboard desktop serta sinkronisasi penataan kolom logbook agar sesuai output Excel.</p>
+                            </div>
+                        </div>
 
-        <div class="relative">
-            <span class="absolute -left-[30px] top-0 bg-gray-200 w-4 h-4 rounded-full border-4 border-white"></span>
-            <h3 class="font-bold text-sm text-gray-400">Milestone 3 (September)</h3>
-            <p class="text-xs text-gray-400 font-semibold mb-1">Status: Pending</p>
-            <div class="text-xs text-gray-400 space-y-1 bg-gray-50 p-2.5 rounded-xl mt-1">
-                <p><strong>Operasional:</strong> Evaluasi berkala alokasi Dana Talangan Brilink dan volume transaksi Uker.</p>
-                <p><strong>Inisiatif IT:</strong> Implementasi koding CRUD agenda mandiri kalender dan pengujian fungsi unduh file rekapitulasi.</p>
-            </div>
-        </div>
-
-        <div class="relative">
-            <span class="absolute -left-[30px] top-0 bg-gray-200 w-4 h-4 rounded-full border-4 border-white"></span>
-            <h3 class="font-bold text-sm text-gray-400">Milestone 4 (Oktober)</h3>
-            <p class="text-xs text-gray-400 font-semibold mb-1">Status: Pending</p>
-            <div class="text-xs text-gray-400 space-y-1 bg-gray-50 p-2.5 rounded-xl mt-1">
-                <p><strong>Operasional:</strong> Penyerahan rekapitulasi performa retail funding triwulan kepada pimpinan unit.</p>
-                <p><strong>Inisiatif IT:</strong> Penarikan final data CSV absensi sebagai lampiran sah Buku Laporan Magang Kampus.</p>
-            </div>
-        </div>
-    </div>
-</div>
+                        <div class="relative">
+                            <span class="absolute -left-[30px] top-0 bg-gray-200 w-4 h-4 rounded-full border-4 border-white"></span>
+                            <h3 class="font-bold text-sm text-gray-400">Milestone 3 (September)</h3>
+                            <p class="text-xs text-gray-400 font-semibold mb-1">Status: Pending</p>
+                            <div class="text-xs text-gray-400 space-y-1 bg-gray-50 p-2.5 rounded-xl mt-1">
+                                <p><strong>Operasional:</strong> Evaluasi berkala alokasi Dana Talangan Brilink dan volume transaksi Uker.</p>
+                                <p><strong>Inisiatif IT:</strong> Implementasi koding CRUD agenda mandiri kalender dan pengujian fungsi unduh file rekapitulasi.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
 
             </div>
         </div>
     </main>
 
+    <!-- MODAL CRUD AGENDA -->
     <div id="crudModal" class="fixed inset-0 z-50 flex items-center justify-center hidden bg-black/50 p-4 backdrop-blur-sm transition-all">
         <div class="bg-white rounded-3xl w-full max-w-md p-6 shadow-2xl border border-gray-100 transform transition-all scale-95 opacity-0 duration-300" id="modalBox">
             
@@ -155,6 +153,9 @@
             </div>
 
             <form method="POST" action="" id="formAgenda">
+                <!-- INJEKSI CSRF TOKEN YG BENAR -->
+                <input type="hidden" name="csrf_token" value="<?php echo $_SESSION['csrf_token'] ?? ''; ?>">
+                
                 <input type="hidden" name="action" id="actionInput" value="create">
                 <input type="hidden" name="id_agenda" id="idAgendaInput" value="">
 
@@ -186,7 +187,7 @@
                 </div>
 
                 <div class="flex items-center justify-between gap-3 pt-4 border-t border-gray-50">
-                    <button type="submit" name="hapus_agenda" id="btnDelete" class="hidden bg-rose-50 hover:bg-rose-100 text-rose-600 font-bold py-2.5 px-4 rounded-xl transition text-sm">
+                    <button type="submit" name="hapus_agenda" id="btnDelete" class="hidden bg-rose-50 hover:bg-rose-100 text-rose-600 font-bold py-2.5 px-4 rounded-xl transition text-sm" onclick="return confirm('Yakin ingin menghapus agenda ini?');">
                         Hapus
                     </button>
                     
@@ -204,6 +205,7 @@
     </div>
 
     <script>
+        // SCRIPT MODAL CRUD
         const modal = document.getElementById('crudModal');
         const modalBox = document.getElementById('modalBox');
 
@@ -243,6 +245,27 @@
                 modal.classList.add('hidden');
             }, 200);
         }
+
+        // SCRIPT SIDEBAR MOBILE (SOLUSI BUG HAMBURGER MENU)
+        document.addEventListener('DOMContentLoaded', () => {
+            const sidebar = document.getElementById('sidebar');
+            const mobileMenuBtn = document.getElementById('mobileMenuBtn');
+            const closeSidebarBtn = document.getElementById('closeSidebarBtn');
+            const sidebarOverlay = document.getElementById('sidebarOverlay');
+
+            const toggleSidebar = () => {
+                if(sidebar && sidebarOverlay) {
+                    sidebar.classList.toggle('-translate-x-full');
+                    sidebarOverlay.classList.toggle('hidden');
+                }
+            };
+
+            if (mobileMenuBtn && closeSidebarBtn && sidebarOverlay) {
+                mobileMenuBtn.addEventListener('click', toggleSidebar);
+                closeSidebarBtn.addEventListener('click', toggleSidebar);
+                sidebarOverlay.addEventListener('click', toggleSidebar);
+            }
+        });
     </script>
 
     <?php include 'components/alert.php'; ?>
