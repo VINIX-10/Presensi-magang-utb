@@ -27,7 +27,7 @@ require 'proses/proses_dashboard.php'; ?>
                 <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-5">
                     <h2 class="text-lg font-bold text-gray-800">Detail Mahasiswa</h2>
                 </div>
-                
+
                 <div class="flex flex-wrap md:flex-nowrap items-center gap-6">
                     <img src="https://ui-avatars.com/api/?name=<?php echo urlencode($user_data['nama_user']); ?>&background=ebf4ff&color=2563eb&size=128" alt="Profile" class="w-20 h-20 rounded-full shadow-sm">
                     <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-4 md:gap-6 w-full text-sm">
@@ -203,7 +203,7 @@ require 'proses/proses_dashboard.php'; ?>
                                 <th class="p-4">Jam Keluar</th>
                                 <th class="p-4 hidden sm:table-cell">Total Jam</th>
                                 <th class="p-4 text-center">Status</th>
-                                <th class="p-4">Catatan / Logbook</th>
+                                <th class="p-4">Logbook</th>
                                 <th class="p-4 text-center">Aksi</th>
                             </tr>
                         </thead>
@@ -212,16 +212,16 @@ require 'proses/proses_dashboard.php'; ?>
                             // RENDER DINAMIS DARI DATABASE LANGSUNG
                             $no = 1;
                             $query_riwayat = $conn->query("SELECT * FROM kehadiran WHERE user_id = '{$_SESSION['user_id']}' ORDER BY tanggal DESC");
-                            
+
                             if ($query_riwayat && $query_riwayat->num_rows > 0):
                                 while ($row = $query_riwayat->fetch_assoc()):
-                                    
+
                                     // Set Warna Status
                                     $status_color = 'bg-gray-100 text-gray-600';
                                     if ($row['status'] == 'Hadir' || $row['status'] == 'Lembur') $status_color = 'bg-emerald-50 text-emerald-600 font-medium';
                                     elseif ($row['status'] == 'Izin') $status_color = 'bg-amber-50 text-amber-600 font-medium';
                                     elseif ($row['status'] == 'Sakit') $status_color = 'bg-rose-50 text-rose-600 font-medium';
-                                    
+
                                     // Format Hari Indonesia
                                     $hari_inggris = date('l', strtotime($row['tanggal']));
                                     $daftar_hari = ['Sunday' => 'Minggu', 'Monday' => 'Senin', 'Tuesday' => 'Selasa', 'Wednesday' => 'Rabu', 'Thursday' => 'Kamis', 'Friday' => 'Jumat', 'Saturday' => 'Sabtu'];
@@ -235,42 +235,42 @@ require 'proses/proses_dashboard.php'; ?>
                                         $diff = strtotime($row['waktu_keluar']) - strtotime($row['waktu_masuk']);
                                         $total_jam = round($diff / 3600, 1) . ' Jam';
                                     }
-                                    
+
                                     // Filter Catatan Kosong
                                     $catatan = empty($row['catatan']) ? '-' : htmlspecialchars($row['catatan']);
                             ?>
-                            <tr class="hover:bg-gray-50/50 transition border-b border-gray-50 text-sm text-gray-700">
-                                <td class="p-4 w-12 text-center text-gray-400"><?php echo $no++; ?></td>
-                                <td class="p-4 font-medium"><?php echo date('d M Y', strtotime($row['tanggal'])); ?></td>
-                                <td class="p-4 hidden md:table-cell text-gray-500"><?php echo $hari_indo; ?></td>
-                                <td class="p-4 text-gray-600"><?php echo $jam_masuk; ?></td>
-                                <td class="p-4 text-gray-600"><?php echo $jam_keluar; ?></td>
-                                <td class="p-4 hidden sm:table-cell font-medium text-gray-700"><?php echo $total_jam; ?></td>
-                                <td class="p-4 text-center">
-                                    <span class="px-3 py-1 rounded-full text-xs <?php echo $status_color; ?>">
-                                        <?php echo $row['status']; ?>
-                                    </span>
-                                </td>
-                                <td class="p-4 text-gray-500 truncate max-w-[150px] md:max-w-xs">
-                                    <?php if ($catatan != '-'): ?>
-                                        <span class="inline-flex items-center gap-1 text-gray-700">📝 <?php echo $catatan; ?></span>
-                                    <?php else: ?>
-                                        <span class="text-gray-300">-</span>
-                                    <?php endif; ?>
-                                </td>
-                                <td class="p-4 text-center">
-                                    <button onclick="openModalLogbook('<?php echo $row['id']; ?>', '<?php echo date('d M Y', strtotime($row['tanggal'])); ?>', '<?php echo $row['status']; ?>', '<?php echo addslashes($catatan); ?>')" class="text-blue-600 hover:text-blue-800 font-semibold text-xs bg-blue-50 hover:bg-blue-100 px-2.5 py-1.5 rounded-lg transition">
-                                        Detail
-                                    </button>
-                                </td>
-                            </tr>
-                            <?php 
-                                endwhile; 
-                            else: 
-                            ?>
-                            <tr>
-                                <td colspan="9" class="p-8 text-center text-gray-400 font-medium">Belum ada riwayat kehadiran bulan ini.</td>
-                            </tr>
+                                    <tr class="hover:bg-gray-50/50 transition border-b border-gray-50 text-sm text-gray-700">
+                                        <td class="p-4 w-12 text-center text-gray-400"><?php echo $no++; ?></td>
+                                        <td class="p-4 font-medium"><?php echo date('d M Y', strtotime($row['tanggal'])); ?></td>
+                                        <td class="p-4 hidden md:table-cell text-gray-500"><?php echo $hari_indo; ?></td>
+                                        <td class="p-4 text-gray-600"><?php echo $jam_masuk; ?></td>
+                                        <td class="p-4 text-gray-600"><?php echo $jam_keluar; ?></td>
+                                        <td class="p-4 hidden sm:table-cell font-medium text-gray-700"><?php echo $total_jam; ?></td>
+                                        <td class="p-4 text-center">
+                                            <span class="px-3 py-1 rounded-full text-xs <?php echo $status_color; ?>">
+                                                <?php echo $row['status']; ?>
+                                            </span>
+                                        </td>
+                                        <td class="p-4 text-gray-500 truncate max-w-[150px] md:max-w-xs">
+                                            <?php if ($catatan != '-'): ?>
+                                                <span class="inline-flex items-center gap-1 text-gray-700">📝 <?php echo $catatan; ?></span>
+                                            <?php else: ?>
+                                                <span class="text-gray-300">-</span>
+                                            <?php endif; ?>
+                                        </td>
+                                        <td class="p-4 text-center">
+                                            <button onclick="openModalLogbook('<?php echo $row['id']; ?>', '<?php echo date('d M Y', strtotime($row['tanggal'])); ?>', '<?php echo $row['status']; ?>', '<?php echo addslashes($catatan); ?>')" class="text-blue-600 hover:text-blue-800 font-semibold text-xs bg-blue-50 hover:bg-blue-100 px-2.5 py-1.5 rounded-lg transition">
+                                                Detail
+                                            </button>
+                                        </td>
+                                    </tr>
+                                <?php
+                                endwhile;
+                            else:
+                                ?>
+                                <tr>
+                                    <td colspan="9" class="p-8 text-center text-gray-400 font-medium">Belum ada riwayat kehadiran bulan ini.</td>
+                                </tr>
                             <?php endif; ?>
                         </tbody>
                     </table>
@@ -290,12 +290,12 @@ require 'proses/proses_dashboard.php'; ?>
                     </svg>
                 </button>
             </div>
-            
+
             <form method="POST" action="" class="p-6 space-y-4">
                 <!-- INJEKSI CSRF DAN ID KEHADIRAN -->
                 <input type="hidden" name="csrf_token" value="<?php echo $_SESSION['csrf_token']; ?>">
                 <input type="hidden" name="id_kehadiran" id="modalIdInput">
-                
+
                 <div class="grid grid-cols-2 gap-4 text-xs font-semibold text-gray-500">
                     <div class="bg-gray-50 p-3 rounded-xl">
                         <span class="text-gray-400 block mb-0.5 font-medium">Tanggal</span>
@@ -336,22 +336,22 @@ require 'proses/proses_dashboard.php'; ?>
 
     <!-- Cache Busting agar update script.js langsung terbaca -->
     <script src="assets/script.js?v=<?php echo time(); ?>"></script>
-    
+
     <script>
         // Memperbaiki modal script agar membawa parameter ID
         function openModalLogbook(id, tanggal, status, catatan) {
             const modal = document.getElementById('logbookModal');
             const content = document.getElementById('modalContent');
-            
+
             // Masukkan ID ke form hidden
             document.getElementById('modalIdInput').value = id;
             document.getElementById('modalTanggalText').innerText = tanggal;
-            
+
             const statusText = document.getElementById('modalStatusText');
             statusText.innerText = status;
             statusText.className = "text-sm px-2 py-0.5 rounded-full inline-block mt-0.5 font-bold ";
-            if(status === 'Hadir' || status === 'Lembur') statusText.className += "bg-emerald-50 text-emerald-600";
-            else if(status === 'Izin') statusText.className += "bg-amber-50 text-amber-600";
+            if (status === 'Hadir' || status === 'Lembur') statusText.className += "bg-emerald-50 text-emerald-600";
+            else if (status === 'Izin') statusText.className += "bg-amber-50 text-amber-600";
             else statusText.className += "bg-rose-50 text-rose-600";
 
             document.getElementById('modalCatatanInput').value = catatan === '-' ? '' : catatan;
@@ -366,10 +366,10 @@ require 'proses/proses_dashboard.php'; ?>
         function closeModalLogbook() {
             const modal = document.getElementById('logbookModal');
             const content = document.getElementById('modalContent');
-            
+
             content.classList.remove('scale-100', 'opacity-100');
             content.classList.add('scale-95', 'opacity-0');
-            
+
             setTimeout(() => {
                 modal.classList.add('hidden');
             }, 300);
