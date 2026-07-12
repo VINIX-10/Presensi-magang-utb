@@ -4,33 +4,76 @@ require_once __DIR__ . '/../config/sesi.php';
 
 $pesan_alert = "";
 
-// 2. PROSES SIMPAN CATATAN LOGBOOK (POST)
-if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['simpan_logbook'])) {
+// 2. PROSES CRUD AGENDA MANDIRI KALENDER (POST)
+if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     
-    // SATPAM CSRF: Periksa apakah token dikirim dan cocok dengan yang ada di server (Fitur Keamanan Teman)
+    // SATPAM CSRF: Periksa apakah token dikirim dan cocok dengan yang ada di server
     if (!isset($_POST['csrf_token']) || $_POST['csrf_token'] !== $_SESSION['csrf_token']) {
         die("Error 403: CSRF Token Invalid! Terdeteksi aktivitas mencurigakan.");
     }
-    $id_kehadiran = $_POST['id_kehadiran'];
 
-    // XSS ARMOR: Mengubah tag HTML/Javascript menjadi teks biasa sebelum masuk Database (Fitur Keamanan Teman)
-    $catatan_kerja = htmlspecialchars($_POST['catatan_kerja'], ENT_QUOTES, 'UTF-8');
+    $action = $_POST['action'] ?? '';
+    $id_agenda = $_POST['id_agenda'] ?? '';
 
-    // Keamanan ekstra: pastikan logbook yang diubah memang milik user yang login
-    $stmt = $conn->prepare("UPDATE kehadiran SET catatan = ? WHERE id = ? AND user_id = ?");
-    $stmt->bind_param("sii", $catatan_kerja, $id_kehadiran, $user_id);
+    // PROSES HAPUS (DELETE)
+    if (isset($_POST['hapus_agenda']) && !empty($id_agenda)) {
+        $stmt = $conn->prepare("DELETE FROM agenda WHERE id = ? AND user_id = ?");
+        $stmt->bind_param("ii", $id_agenda, $user_id);
+        
+        if ($stmt->execute()) {
+            $pesan_alert = "Agenda berhasil dihapus!";
+        }
+    } 
+    // PROSES SIMPAN / UPDATE (CREATE & EDIT)
+    elseif (isset($_POST['simpan_agenda'])) {
+        
+        // XSS ARMOR: Mengubah tag HTML/Javascript menjadi teks biasa sebelum masuk Database
+        $judul = htmlspecialchars($_POST['judul_agenda'], ENT_QUOTES, 'UTF-8');
+        $kategori = htmlspecialchars($_POST['kategori'], ENT_QUOTES, 'UTF-8');
+        $tanggal = htmlspecialchars($_POST['tanggal_agenda'], ENT_QUOTES, 'UTF-8');
+        $deskripsi = htmlspecialchars($_POST['deskripsi_agenda'], ENT_QUOTES, 'UTF-8');
 
-    if ($stmt->execute()) {
-        $pesan_alert = "Logbook aktivitas berhasil diperbarui!";
-    } else {
-        $pesan_alert = "Gagal memperbarui logbook.";
+        // Keamanan ekstra: query dipisah berdasarkan tipe action yang dikirim dari Frontend
+        if ($action == 'create') {
+            $stmt = $conn->prepare("INSERT INTO agenda (user_id, judul, kategori, tanggal, deskripsi) VALUES (?, ?, ?, ?, ?)");
+            $stmt->bind_param("issss", $user_id, $judul, $kategori, $tanggal, $deskripsi);
+            
+            if ($stmt->execute()) {
+                $pesan_alert = "Agenda baru berhasil ditambahkan!";
+            }
+        } elseif ($action == 'edit' && !empty($id_agenda)) {
+            $stmt = $conn->prepare("UPDATE agenda SET judul = ?, kategori = ?, tanggal = ?, deskripsi = ? WHERE id = ? AND user_id = ?");
+            $stmt->bind_param("ssssii", $judul, $kategori, $tanggal, $deskripsi, $id_agenda, $user_id);
+            
+            if ($stmt->execute()) {
+                $pesan_alert = "Agenda berhasil diperbarui!";
+            }
+        }
     }
 }
 
-// 3. MENGAMBIL DATA RIWAYAT ABSENSI
-$query_riwayat = $conn->query("SELECT * FROM kehadiran WHERE user_id = '$user_id' ORDER BY tanggal DESC");
+// 3. LOGIKA MATEMATIKA RENDER KALENDER
+$bulan_aktif = isset($_GET['bulan']) ? sprintf('%02d', $_GET['bulan']) : '07';
+$tahun_aktif = '2026';
 
-// 4. FUNGSI TRANSLATE HARI
+// Menghitung slot kosong dan total hari untuk tampilan grid kalender
+$total_hari = date('t', strtotime("$tahun_aktif-$bulan_aktif-01"));
+$hari_pertama = date('N', strtotime("$tahun_aktif-$bulan_aktif-01"));
+$slot_kosong = $hari_pertama - 1; 
+
+// 4. AMBIL DATA AGENDA DARI DATABASE UNTUK BULAN AKTIF
+$agenda_list = [];
+$query_agenda = $conn->query("SELECT * FROM agenda WHERE user_id = '$user_id' AND MONTH(tanggal) = '$bulan_aktif' AND YEAR(tanggal) = '$tahun_aktif'");
+
+if ($query_agenda) {
+    while ($row = $query_agenda->fetch_assoc()) {
+        // Kelompokkan data berdasarkan tanggal kalender (format hari 1-31)
+        $tgl_hari = date('j', strtotime($row['tanggal'])); 
+        $agenda_list[$tgl_hari] = $row; 
+    }
+}
+
+// 5. FUNGSI TRANSLATE HARI (Dipertahankan jika nanti dibutuhkan Frontend)
 function hariIndo(string $tanggal)
 {
     $hari_inggris = date('l', strtotime($tanggal));
@@ -45,3 +88,4 @@ function hariIndo(string $tanggal)
     ];
     return $daftar_hari[$hari_inggris];
 }
+?>
