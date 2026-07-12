@@ -3,7 +3,7 @@ CREATE DATABASE IF NOT EXISTS absensi_db;
 USE absensi_db;
 
 -- --------------------------------------------------------
--- 1. Struktur dari tabel `users`
+-- 1. Struktur dari tabel `users` 'pengguna'
 -- --------------------------------------------------------
 CREATE TABLE IF NOT EXISTS `users` (
   `id` int(11) NOT NULL AUTO_INCREMENT,
