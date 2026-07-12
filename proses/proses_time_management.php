@@ -56,6 +56,14 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
 $bulan_aktif = isset($_GET['bulan']) ? sprintf('%02d', $_GET['bulan']) : '07';
 $tahun_aktif = '2026';
 
+//konfersi angka ke nama bulan
+$nama_bulan_indo = [
+    '07' => 'Juli 2026',
+    '08' => 'Agustus 2026',
+    '09' => 'September 2026',
+    '10' => 'Oktober 2026'
+];
+
 // Menghitung slot kosong dan total hari untuk tampilan grid kalender
 $total_hari = date('t', strtotime("$tahun_aktif-$bulan_aktif-01"));
 $hari_pertama = date('N', strtotime("$tahun_aktif-$bulan_aktif-01"));
