@@ -4,7 +4,7 @@ require_once __DIR__ . '/../config/sesi.php';
 
 $pesan_alert = "";
 
-// 2. PROSES CRUD AGENDA MANDIRI KALENDER (POST)
+// 2. PROSES CRUD AGENDA MANDIRI KALENDER & TARGET MILESTONE (POST)
 if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     
     // SATPAM CSRF: Periksa apakah token dikirim dan cocok dengan yang ada di server
@@ -24,7 +24,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             $pesan_alert = "Agenda berhasil dihapus!";
         }
     } 
-    // PROSES SIMPAN / UPDATE (CREATE & EDIT)
+    // PROSES SIMPAN / UPDATE AGENDA (CREATE & EDIT)
     elseif (isset($_POST['simpan_agenda'])) {
         
         // XSS ARMOR: Mengubah tag HTML/Javascript menjadi teks biasa sebelum masuk Database
@@ -48,6 +48,24 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             if ($stmt->execute()) {
                 $pesan_alert = "Agenda berhasil diperbarui!";
             }
+        }
+    }
+    // PROSES UBAH MILESTONE BULANAN (UPDATE) - IMPLEMENTASI BARU
+    elseif (isset($_POST['ubah_milestone'])) {
+        $bulan_key = trim($_POST['bulan_key']);
+        $status = trim($_POST['status_milestone']);
+        
+        // XSS ARMOR untuk deskripsi target operasional dan IT
+        $operasional = htmlspecialchars($_POST['operasional_milestone'], ENT_QUOTES, 'UTF-8');
+        $it = htmlspecialchars($_POST['it_milestone'], ENT_QUOTES, 'UTF-8');
+
+        $stmt_update = $conn->prepare("UPDATE milestones SET status = ?, operasional = ?, it = ? WHERE user_id = ? AND bulan_key = ?");
+        $stmt_update->bind_param("sssis", $status, $operasional, $it, $user_id, $bulan_key);
+
+        if ($stmt_update->execute()) {
+            // Refresh halaman agar data terbaru langsung ter-render bersih di halaman depan
+            header("Location: time-management.php?bulan=" . $bulan_key);
+            exit;
         }
     }
 }
@@ -81,7 +99,53 @@ if ($query_agenda) {
     }
 }
 
-// 5. FUNGSI TRANSLATE HARI (Dipertahankan jika nanti dibutuhkan Frontend)
+// 5. AMBIL DATA MILESTONE DINAMIS DARI DATABASE (DENGAN AUTOMATIC SEEDER) - IMPLEMENTASI BARU
+$milestone_list = [];
+$stmt_ms = $conn->prepare("SELECT * FROM milestones WHERE user_id = ? ORDER BY bulan_key ASC");
+$stmt_ms->bind_param("i", $user_id);
+$stmt_ms->execute();
+$res_ms = $stmt_ms->get_result();
+
+while ($row = $res_ms->fetch_assoc()) {
+    $milestone_list[$row['bulan_key']] = [
+        'id'          => $row['id'],
+        'judul'       => $row['judul'],
+        'status'      => $row['status'],
+        'operasional' => $row['operasional'],
+        'it'          => $row['it']
+    ];
+}
+
+// OTOMASI SEEDER: Jika data milestone di database user ini masih kosong, isi otomatis
+if (empty($milestone_list)) {
+    $defaults = [
+        ['07', 'Milestone 1 (Juli)', 'Selesai', 'Penginputan & rekapitulasi data harian finansial (Tabungan, Giro, Depo) Uker Sumedang ke Excel.', 'Analisis kelemahan sistem absen fisik pemagang & perancangan basis data Tracker.'],
+        ['08', 'Milestone 2 (Agustus)', 'Berjalan', 'Monitoring akuisisi produk digital (Brimo, Qlola, QRIS) dan validasi leads Brispot.', 'Desain UI/UX dashboard desktop serta sinkronisasi penataan kolom logbook agar sesuai output Excel.'],
+        ['09', 'Milestone 3 (September)', 'Pending', 'Evaluasi berkala alokasi Dana Talangan Brilink dan volume transaksi Uker.', 'Implementasi koding CRUD agenda mandiri kalender dan pengujian fungsi unduh file rekapitulasi.'],
+        ['10', 'Milestone 4 (Oktober)', 'Pending', 'Penyusunan laporan akhir magang, dokumentasi kode program, serta serah terima sistem.', 'Final deployment sistem absensi magang ke server produksi Laragon.']
+    ];
+
+    foreach ($defaults as $d) {
+        $ins = $conn->prepare("INSERT INTO milestones (user_id, bulan_key, judul, status, operasional, it) VALUES (?, ?, ?, ?, ?, ?)");
+        $ins->bind_param("isssss", $user_id, $d[0], $d[1], $d[2], $d[3], $d[4]);
+        $ins->execute();
+    }
+
+    // Ambil ulang setelah di-isi data default
+    $stmt_ms->execute();
+    $res_ms = $stmt_ms->get_result();
+    while ($row = $res_ms->fetch_assoc()) {
+        $milestone_list[$row['bulan_key']] = [
+            'id'          => $row['id'],
+            'judul'       => $row['judul'],
+            'status'      => $row['status'],
+            'operasional' => $row['operasional'],
+            'it'          => $row['it']
+        ];
+    }
+}
+
+// 6. FUNGSI TRANSLATE HARI (Dipertahankan jika nanti dibutuhkan Frontend)
 function hariIndo(string $tanggal)
 {
     $hari_inggris = date('l', strtotime($tanggal));
