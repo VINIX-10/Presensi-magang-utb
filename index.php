@@ -65,7 +65,7 @@ require 'proses/proses_dashboard.php'; ?>
                 <div class="bg-emerald-400 text-white rounded-3xl p-6 shadow-lg shadow-emerald-200 relative overflow-hidden">
                     <div class="relative z-10">
                         <p class="text-emerald-100 font-medium text-sm mb-1">Kehadiran Terlambat</p>
-                        <h3 class="text-4xl font-bold">0 <span class="text-lg font-medium text-emerald-100">Hari</span></h3>
+                        <h3 class="text-4xl font-bold"><?php echo $stat_terlambat; ?> <span class="text-lg font-medium text-emerald-100">Hari</span></h3>
                     </div>
                 </div>
                 <div class="bg-amber-400 text-white rounded-3xl p-6 shadow-lg shadow-amber-200 relative overflow-hidden">
@@ -334,7 +334,7 @@ require 'proses/proses_dashboard.php'; ?>
         const dataKehadiranBulanan = <?php echo isset($json_grafik_hadir) ? $json_grafik_hadir : '[0,0,0,0,0,0,0,0,0,0,0,0]'; ?>;
     </script>
 
-   <!-- Cache Busting agar update script.js langsung terbaca -->
+    <!-- Cache Busting agar update script.js langsung terbaca -->
     <script src="assets/script.js?v=<?php echo time(); ?>"></script>
 
     <script>
@@ -346,7 +346,7 @@ require 'proses/proses_dashboard.php'; ?>
             const sidebarOverlay = document.getElementById('sidebarOverlay');
 
             const toggleSidebar = () => {
-                if(sidebar && sidebarOverlay) {
+                if (sidebar && sidebarOverlay) {
                     sidebar.classList.toggle('-translate-x-full');
                     sidebarOverlay.classList.toggle('hidden');
                 }
@@ -400,4 +400,5 @@ require 'proses/proses_dashboard.php'; ?>
     <?php include 'components/alert.php'; ?>
 
 </body>
+
 </html>
