@@ -57,3 +57,20 @@ CREATE TABLE IF NOT EXISTS `agenda` (
   KEY `user_id` (`user_id`),
   CONSTRAINT `fk_user_agenda` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE ON UPDATE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+-- --------------------------------------------------------
+-- 5. Struktur Milestone Edit
+-- --------------------------------------------------------
+
+CREATE TABLE IF NOT EXISTS `milestones` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `user_id` int(11) NOT NULL,
+  `bulan_key` varchar(2) NOT NULL, -- Menyimpan '07', '08', '09', '10'
+  `judul` varchar(50) NOT NULL,
+  `status` enum('Pending','Berjalan','Selesai') NOT NULL DEFAULT 'Pending',
+  `operasional` text DEFAULT NULL,
+  `it` text DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  KEY `user_id` (`user_id`),
+  CONSTRAINT `fk_user_milestone` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
