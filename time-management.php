@@ -1,6 +1,38 @@
 <?php 
 // Memanggil otak backend hasil "wiretuck"
 require 'proses/proses_time_management.php'; 
+
+// =========================================================================
+// SAFE FALLBACK: Mengamankan array dinamis milestone jika belum didefinisikan di backend
+// =========================================================================
+if (!isset($milestone_list)) {
+    $milestone_list = [
+        '07' => [
+            'judul' => 'Milestone 1 (Juli)', 
+            'status' => 'Selesai', 
+            'operasional' => 'Penginputan & rekapitulasi data harian finansial (Tabungan, Giro, Depo) Uker Sumedang ke Excel.', 
+            'it' => 'Analisis kelemahan sistem absen fisik pemagang & perancangan basis data Tracker.'
+        ],
+        '08' => [
+            'judul' => 'Milestone 2 (Agustus)', 
+            'status' => 'Berjalan', 
+            'operasional' => 'Monitoring akuisisi produk digital (Brimo, Qlola, QRIS) dan validasi leads Brispot.', 
+            'it' => 'Desain UI/UX dashboard desktop serta sinkronisasi penataan kolom logbook agar sesuai output Excel.'
+        ],
+        '09' => [
+            'judul' => 'Milestone 3 (September)', 
+            'status' => 'Pending', 
+            'operasional' => 'Evaluasi berkala alokasi Dana Talangan Brilink dan volume transaksi Uker.', 
+            'it' => 'Implementasi koding CRUD agenda mandiri kalender dan pengujian fungsi unduh file rekapitulasi.'
+        ],
+        '10' => [
+            'judul' => 'Milestone 4 (Oktober)', 
+            'status' => 'Pending', 
+            'operasional' => 'Penyusunan laporan akhir magang, dokumentasi kode program, serta serah terima sistem.', 
+            'it' => 'Final deployment sistem absensi magang ke server produksi Laragon.'
+        ]
+    ];
+}
 ?>
 <!DOCTYPE html>
 <html lang="id">
@@ -42,7 +74,7 @@ require 'proses/proses_time_management.php';
                     
                     <div class="flex justify-between items-center mb-6">
                         <div class="flex items-center gap-4">
-                            <h2 class="text-xl font-bold text-gray-800"><?= $nama_bulan_indo[$bulan_aktif]; ?></h2>
+                            <h2 class="text-xl font-bold text-gray-800"><?= $nama_bulan_indo[$bulan_aktif] ?? 'Bulan'; ?></h2>
                             <span class="bg-blue-50 text-blue-600 px-3 py-1 rounded-full text-xs font-bold">Periode Aktif</span>
                         </div>
                         
@@ -60,7 +92,6 @@ require 'proses/proses_time_management.php';
                         <div class="py-2">SEN</div><div class="py-2">SEL</div><div class="py-2">RAB</div><div class="py-2">KAM</div><div class="py-2">JUM</div><div class="py-2 text-rose-400">SAB</div><div class="py-2 text-rose-400">MIN</div>
                     </div>
 
-                    <!-- BAGIAN RENDER KALENDER (FULL DINAMIS DARI DATABASE) -->
                     <div class="grid grid-cols-7 gap-2">
                         
                         <?php for($i = 0; $i < $slot_kosong; $i++): ?>
@@ -70,17 +101,14 @@ require 'proses/proses_time_management.php';
                         <?php for($d = 1; $d <= $total_hari; $d++): 
                             $tanggal_format = sprintf('%04d-%02d-%02d', $tahun_aktif, $bulan_aktif, $d);
                             
-                            // Mengecek apakah di tanggal ini ada data yang terdaftar di database
                             if (isset($agenda_list[$d])): 
                                 $agenda = $agenda_list[$d];
                                 
-                                // Pewarnaan dinamis
-                                $warna = 'gray'; $icon = '📌';
-                                if ($agenda['kategori'] == 'Industri') { $warna = 'emerald'; $icon = '🏢'; }
+                                $warna = 'gray'; $icon = '📅';
+                                if ($agenda['kategori'] == 'Industri') { $warna = 'emerald'; $icon = '💼'; }
                                 elseif ($agenda['kategori'] == 'Kampus') { $warna = 'blue'; $icon = '🎓'; }
-                                elseif ($agenda['kategori'] == 'Lembur') { $warna = 'purple'; $icon = '🌙'; }
+                                elseif ($agenda['kategori'] == 'Lembur') { $warna = 'purple'; $icon = '⚡'; }
                         ?>
-                            <!-- Jika ada agenda, tampilkan kotak berwarna -->
                             <div class="min-h-[90px] bg-white border-2 border-<?= $warna; ?>-400 shadow-sm rounded-2xl p-2 flex flex-col justify-between cursor-pointer hover:shadow transition" 
                                  onclick="bukaModalCRUD('edit', '<?= $agenda['id']; ?>', '<?= addslashes($agenda['judul']); ?>', '<?= $agenda['kategori']; ?>', '<?= $agenda['tanggal']; ?>', '<?= addslashes($agenda['deskripsi']); ?>')">
                                 <span class="font-bold text-sm text-<?= $warna; ?>-600"><?= $d; ?></span>
@@ -88,7 +116,6 @@ require 'proses/proses_time_management.php';
                             </div>
 
                         <?php else: ?>
-                            <!-- Jika kosong, tampilkan kotak polos yang bisa diklik untuk tambah agenda -->
                             <div class="min-h-[90px] bg-white border border-gray-100 rounded-2xl p-2 relative flex flex-col justify-between hover:border-blue-300 transition cursor-pointer"
                                  onclick="bukaModalCRUD('create', '', '', 'Industri', '<?= $tanggal_format; ?>', '')">
                                 <span class="font-bold text-sm text-gray-400"><?= $d; ?></span>
@@ -99,41 +126,48 @@ require 'proses/proses_time_management.php';
                     </div>
                 </div>
 
-                <!-- TARGET MILESTONE (Statis) -->
                 <div class="bg-white rounded-3xl p-6 shadow-sm border border-gray-100">
                     <h2 class="text-lg font-bold text-gray-800 mb-6">Target Milestone Magang</h2>
                     <div class="relative pl-6 border-l-2 border-gray-100 space-y-8">
-                        <div class="relative">
-                            <span class="absolute -left-[33px] top-0 bg-emerald-500 text-white p-1 rounded-full border-4 border-white">
-                                <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"></path></svg>
-                            </span>
-                            <h3 class="font-bold text-sm text-gray-800">Milestone 1 (Juli)</h3>
-                            <p class="text-xs text-emerald-600 font-semibold mb-1">Status: Selesai</p>
-                            <div class="text-xs text-gray-500 space-y-1 bg-gray-50 p-2.5 rounded-xl mt-1">
-                                <p><strong>Operasional:</strong> Penginputan & rekapitulasi data harian finansial (Tabungan, Giro, Depo) Uker Sumedang ke Excel.</p>
-                                <p><strong>Inisiatif IT:</strong> Analisis kelemahan sistem absen fisik pemagang & perancangan basis data Tracker.</p>
-                            </div>
-                        </div>
+                        
+                        <?php foreach ($milestone_list as $bln_key => $ms): 
+                            // Penentuan warna badge status secara dinamis
+                            $tag_warna = 'gray';
+                            if ($ms['status'] === 'Selesai') $tag_warna = 'emerald';
+                            elseif ($ms['status'] === 'Berjalan') $tag_warna = 'blue';
+                        ?>
+                            <div class="relative group">
+                                <?php if ($ms['status'] === 'Selesai'): ?>
+                                    <span class="absolute -left-[33px] top-0 bg-emerald-500 text-white p-1 rounded-full border-4 border-white z-10">
+                                        <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"></path></svg>
+                                    </span>
+                                <?php elseif ($ms['status'] === 'Berjalan'): ?>
+                                    <span class="absolute -left-[30px] top-0 bg-blue-600 w-4 h-4 rounded-full border-4 border-white animate-pulse z-10"></span>
+                                <?php else: ?>
+                                    <span class="absolute -left-[30px] top-0 bg-gray-200 w-4 h-4 rounded-full border-4 border-white z-10"></span>
+                                <?php endif; ?>
 
-                        <div class="relative">
-                            <span class="absolute -left-[30px] top-0 bg-blue-600 w-4 h-4 rounded-full border-4 border-white animate-pulse"></span>
-                            <h3 class="font-bold text-sm text-gray-800">Milestone 2 (Agustus)</h3>
-                            <p class="text-xs text-blue-600 font-semibold mb-1">Status: Berjalan</p>
-                            <div class="text-xs text-gray-500 space-y-1 bg-gray-50 p-2.5 rounded-xl mt-1">
-                                <p><strong>Operasional:</strong> Monitoring akuisisi produk digital (Brimo, Qlola, QRIS) dan validasi leads Brispot.</p>
-                                <p><strong>Inisiatif IT:</strong> Desain UI/UX dashboard desktop serta sinkronisasi penataan kolom logbook agar sesuai output Excel.</p>
-                            </div>
-                        </div>
+                                <div class="flex justify-between items-start gap-2">
+                                    <div>
+                                        <h3 class="font-bold text-sm <?= $ms['status'] === 'Pending' ? 'text-gray-400' : 'text-gray-800'; ?>"><?= htmlspecialchars($ms['judul']); ?></h3>
+                                        <p class="text-xs text-<?= $tag_warna; ?>-600 font-semibold mb-1">Status: <?= htmlspecialchars($ms['status']); ?></p>
+                                    </div>
+                                    
+                                    <button onclick="bukaModalMilestone('<?= $bln_key; ?>', '<?= addslashes($ms['judul']); ?>', '<?= $ms['status']; ?>', '<?= addslashes($ms['operasional']); ?>', '<?= addslashes($ms['it']); ?>')" 
+                                            class="text-gray-400 hover:text-blue-600 p-2 rounded-xl hover:bg-gray-50 transition opacity-100 lg:opacity-0 lg:group-hover:opacity-100 focus:opacity-100" title="Ubah Milestone">
+                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"></path>
+                                        </svg>
+                                    </button>
+                                </div>
 
-                        <div class="relative">
-                            <span class="absolute -left-[30px] top-0 bg-gray-200 w-4 h-4 rounded-full border-4 border-white"></span>
-                            <h3 class="font-bold text-sm text-gray-400">Milestone 3 (September)</h3>
-                            <p class="text-xs text-gray-400 font-semibold mb-1">Status: Pending</p>
-                            <div class="text-xs text-gray-400 space-y-1 bg-gray-50 p-2.5 rounded-xl mt-1">
-                                <p><strong>Operasional:</strong> Evaluasi berkala alokasi Dana Talangan Brilink dan volume transaksi Uker.</p>
-                                <p><strong>Inisiatif IT:</strong> Implementasi koding CRUD agenda mandiri kalender dan pengujian fungsi unduh file rekapitulasi.</p>
+                                <div class="text-xs <?= $ms['status'] === 'Pending' ? 'text-gray-400' : 'text-gray-500'; ?> space-y-1 bg-gray-50 p-2.5 rounded-xl mt-1">
+                                    <p><strong>Operasional:</strong> <?= htmlspecialchars($ms['operasional']); ?></p>
+                                    <p><strong>Inisiatif IT:</strong> <?= htmlspecialchars($ms['it']); ?></p>
+                                </div>
                             </div>
-                        </div>
+                        <?php endforeach; ?>
+
                     </div>
                 </div>
 
@@ -141,7 +175,6 @@ require 'proses/proses_time_management.php';
         </div>
     </main>
 
-    <!-- MODAL CRUD AGENDA -->
     <div id="crudModal" class="fixed inset-0 z-50 flex items-center justify-center hidden bg-black/50 p-4 backdrop-blur-sm transition-all">
         <div class="bg-white rounded-3xl w-full max-w-md p-6 shadow-2xl border border-gray-100 transform transition-all scale-95 opacity-0 duration-300" id="modalBox">
             
@@ -153,9 +186,7 @@ require 'proses/proses_time_management.php';
             </div>
 
             <form method="POST" action="" id="formAgenda">
-                <!-- INJEKSI CSRF TOKEN YG BENAR -->
                 <input type="hidden" name="csrf_token" value="<?php echo $_SESSION['csrf_token'] ?? ''; ?>">
-                
                 <input type="hidden" name="action" id="actionInput" value="create">
                 <input type="hidden" name="id_agenda" id="idAgendaInput" value="">
 
@@ -170,7 +201,7 @@ require 'proses/proses_time_management.php';
                             <label class="block text-sm font-semibold text-gray-600 mb-1">Kategori</label>
                             <select name="kategori" id="in-kategori" class="w-full bg-gray-50 border border-gray-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:border-blue-500 text-gray-700 font-medium">
                                 <option value="Industri">Industri</option>
-                                <option value="Kampus">Kampus</option>
+                                <option value="Campaign">Kampus</option>
                                 <option value="Lembur">Lembur</option>
                             </select>
                         </div>
@@ -204,8 +235,55 @@ require 'proses/proses_time_management.php';
         </div>
     </div>
 
+    <div id="milestoneModal" class="fixed inset-0 z-50 flex items-center justify-center hidden bg-black/50 p-4 backdrop-blur-sm transition-all">
+        <div class="bg-white rounded-3xl w-full max-w-md p-6 shadow-2xl border border-gray-100 transform transition-all scale-95 opacity-0 duration-300" id="milestoneModalBox">
+            
+            <div class="flex justify-between items-center mb-5">
+                <h3 id="milestoneModalTitle" class="text-lg font-bold text-gray-800">Ubah Target Milestone</h3>
+                <button onclick="tutupModalMilestone()" class="text-gray-400 hover:text-gray-600">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                </button>
+            </div>
+
+            <form method="POST" action="" id="formMilestone">
+                <input type="hidden" name="csrf_token" value="<?php echo $_SESSION['csrf_token'] ?? ''; ?>">
+                <input type="hidden" name="bulan_key" id="ms-bulan-key" value="">
+
+                <div class="space-y-4 mb-6">
+                    <div>
+                        <label class="block text-sm font-semibold text-gray-600 mb-1">Status Progres Milestone</label>
+                        <select name="status_milestone" id="ms-status" class="w-full bg-gray-50 border border-gray-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:border-blue-500 text-gray-700 font-medium">
+                            <option value="Pending">Pending</option>
+                            <option value="Berjalan">Berjalan</option>
+                            <option value="Selesai">Selesai</option>
+                        </select>
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-semibold text-gray-600 mb-1">Deskripsi Target Operasional / Finansial</label>
+                        <textarea name="operasional_milestone" id="ms-operasional" rows="3" required placeholder="Contoh: Rekapitulasi target nominal Tabungan/Giro..." class="w-full bg-gray-50 border border-gray-200 rounded-xl p-4 text-sm focus:outline-none focus:border-blue-500 placeholder-gray-400 resize-none text-gray-700 font-medium"></textarea>
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-semibold text-gray-600 mb-1">Deskripsi Target Pengembangan IT</label>
+                        <textarea name="it_milestone" id="ms-it" rows="3" required placeholder="Contoh: Implementasi modul database & security..." class="w-full bg-gray-50 border border-gray-200 rounded-xl p-4 text-sm focus:outline-none focus:border-blue-500 placeholder-gray-400 resize-none text-gray-700 font-medium"></textarea>
+                    </div>
+                </div>
+
+                <div class="flex items-center justify-end gap-3 pt-4 border-t border-gray-50">
+                    <button type="button" onclick="tutupModalMilestone()" class="border border-gray-200 hover:bg-gray-50 text-gray-500 font-bold py-2.5 px-4 rounded-xl transition text-sm">
+                        Batal
+                    </button>
+                    <button type="submit" name="ubah_milestone" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2.5 px-5 rounded-xl shadow-lg shadow-blue-100 transition text-sm">
+                        Simpan Perubahan
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
     <script>
-        // SCRIPT MODAL CRUD
+        // SCRIPT AGENDA MODAL CONTROLLER
         const modal = document.getElementById('crudModal');
         const modalBox = document.getElementById('modalBox');
 
@@ -243,6 +321,34 @@ require 'proses/proses_time_management.php';
             modalBox.classList.add('scale-95', 'opacity-0');
             setTimeout(() => {
                 modal.classList.add('hidden');
+            }, 200);
+        }
+
+        // =========================================================================
+        // SCRIPT MILESTONE MODAL CONTROLLER (BARU)
+        // =========================================================================
+        const milestoneModal = document.getElementById('milestoneModal');
+        const milestoneModalBox = document.getElementById('milestoneModalBox');
+
+        function bukaModalMilestone(bulanKey, judul, status, operasional, it) {
+            document.getElementById('ms-bulan-key').value = bulanKey;
+            document.getElementById('milestoneModalTitle').innerText = "Ubah " + judul;
+            document.getElementById('ms-status').value = status;
+            document.getElementById('ms-operasional').value = operasional;
+            document.getElementById('ms-it').value = it;
+
+            milestoneModal.classList.remove('hidden');
+            setTimeout(() => {
+                milestoneModalBox.classList.remove('scale-95', 'opacity-0');
+                milestoneModalBox.classList.add('scale-100', 'opacity-100');
+            }, 50);
+        }
+
+        function tutupModalMilestone() {
+            milestoneModalBox.classList.remove('scale-100', 'opacity-100');
+            milestoneModalBox.classList.add('scale-95', 'opacity-0');
+            setTimeout(() => {
+                milestoneModal.classList.add('hidden');
             }, 200);
         }
 
