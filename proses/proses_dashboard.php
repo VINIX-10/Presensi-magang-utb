@@ -84,6 +84,17 @@ $data_absen_hari_ini = $query_absen_hari_ini->fetch_assoc();
 $stat_hadir = $conn->query("SELECT COUNT(id) as total FROM kehadiran WHERE user_id = '$user_id' AND status IN ('Hadir', 'Lembur')")->fetch_assoc()['total'];
 $stat_izin = $conn->query("SELECT COUNT(id) as total FROM kehadiran WHERE user_id = '$user_id' AND status IN ('Sakit', 'Izin')")->fetch_assoc()['total'];
 
+// LOGIKA BARU: Deteksi Terlambat (Jika status Hadir dan waktu_masuk lebih dari jam 08:00 pagi)
+$batas_jam_masuk = '08:00:00'; 
+$stat_terlambat = $conn->query("
+    SELECT COUNT(id) as total 
+    FROM kehadiran 
+    WHERE user_id = '$user_id' 
+    AND status = 'Hadir' 
+    AND TIME(waktu_masuk) > '$batas_jam_masuk'
+")->fetch_assoc()['total'];
+
+
 // 7. AMBIL DATA UNTUK GRAFIK (CHART.JS) BULANAN
 $tahun_ini = '2026'; // Bisa diganti date('Y') jika ingin otomatis tahun berjalan
 $data_grafik_hadir = array_fill(1, 12, 0); // Siapkan array kosong untuk 12 bulan
