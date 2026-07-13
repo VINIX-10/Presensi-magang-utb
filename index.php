@@ -401,6 +401,33 @@ require 'proses/proses_dashboard.php'; ?>
                 modal.classList.add('hidden');
             }, 300);
         }
+
+        // --- 3. SCRIPT LIVE SEARCH FILTER ---
+        function filterTable() {
+            // Ambil teks dari kotak pencarian dan ubah jadi huruf kecil semua
+            let input = document.getElementById("searchInput");
+            let filter = input.value.toLowerCase();
+            
+            // Ambil elemen tbody dari tabel riwayat
+            let tbody = document.querySelector("table tbody");
+            let tr = tbody.getElementsByTagName("tr");
+
+            // Lakukan perulangan untuk mengecek setiap baris tabel
+            for (let i = 0; i < tr.length; i++) {
+                // Jangan sembunyikan baris kalau isinya tulisan "Belum ada riwayat"
+                if (tr[i].getElementsByTagName("td").length === 1) continue; 
+
+                // Gabungkan semua teks di dalam baris tersebut agar bisa dicari
+                let rowText = tr[i].innerText.toLowerCase();
+                
+                // Jika teks yang dicari ada di baris tersebut, tampilkan. Kalau tidak, sembunyikan.
+                if (rowText.indexOf(filter) > -1) {
+                    tr[i].style.display = "";
+                } else {
+                    tr[i].style.display = "none";
+                }
+            }
+        }
     </script>
 
     <?php include 'components/alert.php'; ?>
