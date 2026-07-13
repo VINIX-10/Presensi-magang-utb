@@ -22,7 +22,7 @@ if (!isset($_SESSION['nama_user']) || !isset($_SESSION['user_id'])) {
 }
 
 // 2. Cek Timeout (15 Menit)
-$timeout_duration = 900; 
+$timeout_duration = 300; 
 if (isset($_SESSION['last_activity']) && (time() - $_SESSION['last_activity']) > $timeout_duration) {
     session_unset();
     session_destroy();
