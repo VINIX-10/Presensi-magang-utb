@@ -5,7 +5,8 @@
         </button>
         <div class="relative w-full max-w-xs sm:block">
             <?php if (basename($_SERVER['PHP_SELF']) == 'index.php'): ?>
-                <input type="text" placeholder="Cari data..." class="w-full bg-gray-100 rounded-full py-2.5 pl-12 pr-4 text-sm focus:outline-none focus:ring-2 focus:ring-blue-100 transition">
+                <!-- INI YANG DIMODIFIKASI: Tambah id dan onkeyup -->
+                <input type="text" id="searchInput" onkeyup="filterTable()" placeholder="Cari tanggal, status, atau logbook..." class="w-full bg-gray-100 rounded-full py-2.5 pl-12 pr-4 text-sm focus:outline-none focus:ring-2 focus:ring-blue-100 transition">
                 <svg class="w-4 h-4 text-gray-400 absolute left-5 top-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
             <?php else: ?>
                 <h2 class="text-xl font-bold text-gray-800">Riwayat Kehadiran</h2>
