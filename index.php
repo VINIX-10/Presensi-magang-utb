@@ -65,7 +65,8 @@ require 'proses/proses_dashboard.php'; ?>
                 <div class="bg-emerald-400 text-white rounded-3xl p-6 shadow-lg shadow-emerald-200 relative overflow-hidden">
                     <div class="relative z-10">
                         <p class="text-emerald-100 font-medium text-sm mb-1">Kehadiran Terlambat</p>
-                        <h3 class="text-4xl font-bold"><?php echo $stat_terlambat; ?> <span class="text-lg font-medium text-emerald-100">Hari</span></h3>
+                        <!-- Variabel stat_terlambat disuntikkan di sini -->
+                        <h3 class="text-4xl font-bold"><?php echo isset($stat_terlambat) ? $stat_terlambat : '0'; ?> <span class="text-lg font-medium text-emerald-100">Hari</span></h3>
                     </div>
                 </div>
                 <div class="bg-amber-400 text-white rounded-3xl p-6 shadow-lg shadow-amber-200 relative overflow-hidden">
@@ -227,9 +228,14 @@ require 'proses/proses_dashboard.php'; ?>
                                     $daftar_hari = ['Sunday' => 'Minggu', 'Monday' => 'Senin', 'Tuesday' => 'Selasa', 'Wednesday' => 'Rabu', 'Thursday' => 'Kamis', 'Friday' => 'Jumat', 'Saturday' => 'Sabtu'];
                                     $hari_indo = $daftar_hari[$hari_inggris];
 
-                                    // Perhitungan Total Jam
-                                    $jam_masuk = $row['waktu_masuk'] ? date('H:i', strtotime($row['waktu_masuk'])) : '-';
+                                    // Perhitungan Total Jam & Badge Telat
+                                    $jam_masuk_asli = $row['waktu_masuk'];
                                     $jam_keluar = $row['waktu_keluar'] ? date('H:i', strtotime($row['waktu_keluar'])) : '-';
+
+                                    // Cek apakah dia telat (Lewat jam 08:00)
+                                    $badge_telat = ($row['status'] == 'Hadir' && $jam_masuk_asli > '08:00:00') ? '<br><span class="text-[10px] bg-rose-100 text-rose-600 px-1.5 py-0.5 rounded font-bold">Telat</span>' : '';
+                                    $jam_masuk_tampil = $jam_masuk_asli ? date('H:i', strtotime($jam_masuk_asli)) . $badge_telat : '-';
+
                                     $total_jam = '-';
                                     if ($row['waktu_masuk'] && $row['waktu_keluar']) {
                                         $diff = strtotime($row['waktu_keluar']) - strtotime($row['waktu_masuk']);
@@ -243,7 +249,7 @@ require 'proses/proses_dashboard.php'; ?>
                                         <td class="p-4 w-12 text-center text-gray-400"><?php echo $no++; ?></td>
                                         <td class="p-4 font-medium"><?php echo date('d M Y', strtotime($row['tanggal'])); ?></td>
                                         <td class="p-4 hidden md:table-cell text-gray-500"><?php echo $hari_indo; ?></td>
-                                        <td class="p-4 text-gray-600"><?php echo $jam_masuk; ?></td>
+                                        <td class="p-4 text-gray-600"><?php echo $jam_masuk_tampil; ?></td>
                                         <td class="p-4 text-gray-600"><?php echo $jam_keluar; ?></td>
                                         <td class="p-4 hidden sm:table-cell font-medium text-gray-700"><?php echo $total_jam; ?></td>
                                         <td class="p-4 text-center">
