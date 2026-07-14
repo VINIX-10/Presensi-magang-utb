@@ -2,6 +2,11 @@
 // Menggunakan __DIR__ agar path bersifat absolut dan anti-error saat di-include oleh index.php
 require_once __DIR__ . '/../config/sesi.php';
 
+// === FIX BUG: PEMBUAT TOKEN CSRF ===
+if (empty($_SESSION['csrf_token'])) {
+    $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
+}
+
 // AMAN DARI ERROR: Deklarasikan variabel $user_id dari sesi secara eksplisit
 $user_id = $_SESSION['user_id'];
 
