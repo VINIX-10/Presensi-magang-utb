@@ -1,0 +1,12 @@
+# Aktifkan mode penulisan ulang URL (Rewrite Engine)
+RewriteEngine On
+
+# 1. Hapus garis miring di akhir URL (Trailing Slash) agar lebih rapi
+RewriteCond %{REQUEST_FILENAME} !-d
+RewriteRule ^(.*)/$ /$1 [L,R=301]
+
+# 2. Rute URL Bersih (Single Page Application Feel)
+RewriteRule ^login$ absensi/login.php [L]
+RewriteRule ^dashboard$ absensi/index.php [L]
+RewriteRule ^kalender$ absensi/time_management.php [L]
+RewriteRule ^logout$ absensi/config/logout.php [L]
