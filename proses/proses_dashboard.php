@@ -10,7 +10,7 @@ $pesan_alert = "";
 $tanggal_hari_ini = date('Y-m-d');
 $waktu_sekarang = date('H:i:s');
 $hari_ini_angka = date('N');
-$is_weekend = ($hari_ini_angka >= 6) ? true : false;
+$is_weekend = ($hari_ini_angka >= 6);
 
 // 3. AMBIL DATA USER (Untuk Profile Card)
 $query_user = $conn->query("SELECT * FROM users WHERE id = '$user_id'");
