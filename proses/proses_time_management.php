@@ -2,6 +2,12 @@
 // 1. Panggil satpam sesi dan koneksi database
 require_once __DIR__ . '/../config/sesi.php';
 
+// === FIX BUG: PEMBUAT TOKEN CSRF ===
+if (empty($_SESSION['csrf_token'])) {
+    $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
+}
+// ====================================
+
 $pesan_alert = "";
 
 // 2. PROSES CRUD AGENDA MANDIRI KALENDER & TARGET MILESTONE (POST)
