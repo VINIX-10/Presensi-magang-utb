@@ -242,8 +242,12 @@ require 'proses/proses_dashboard.php'; ?>
                                         $total_jam = round($diff / 3600, 1) . ' Jam';
                                     }
 
-                                    // Filter Catatan Kosong
-                                    $catatan = empty($row['catatan']) ? '-' : htmlspecialchars($row['catatan']);
+                                    // 1. Tangkap catatan aslinya
+                                    $catatan_asli = empty($row['catatan']) ? '-' : $row['catatan'];
+
+                                    // 2. Bersihkan semua tanda kutip dan baris baru (Enter) agar tidak merusak JavaScript!
+                                    $catatan_bersih = htmlspecialchars($catatan_asli, ENT_QUOTES, 'UTF-8');
+                                    $catatan_bersih = str_replace(array("\r", "\n"), array("&#13;", "&#10;"), $catatan_bersih);
                             ?>
                                     <tr class="hover:bg-gray-50/50 transition border-b border-gray-50 text-sm text-gray-700">
                                         <td class="p-4 w-12 text-center text-gray-400"><?php echo $no++; ?></td>
@@ -258,14 +262,20 @@ require 'proses/proses_dashboard.php'; ?>
                                             </span>
                                         </td>
                                         <td class="p-4 text-gray-500 truncate max-w-[150px] md:max-w-xs">
-                                            <?php if ($catatan != '-'): ?>
-                                                <span class="inline-flex items-center gap-1 text-gray-700">📝 <?php echo $catatan; ?></span>
+                                            <?php if ($catatan_asli != '-'): ?>
+                                                <span class="inline-flex items-center gap-1 text-gray-700">📝 <?php echo htmlspecialchars($catatan_asli); ?></span>
                                             <?php else: ?>
                                                 <span class="text-gray-300">-</span>
                                             <?php endif; ?>
                                         </td>
                                         <td class="p-4 text-center">
-                                            <button onclick="openModalLogbook('<?php echo $row['id']; ?>', '<?php echo date('d M Y', strtotime($row['tanggal'])); ?>', '<?php echo $row['status']; ?>', '<?php echo addslashes($catatan); ?>')" class="text-blue-600 hover:text-blue-800 font-semibold text-xs bg-blue-50 hover:bg-blue-100 px-2.5 py-1.5 rounded-lg transition">
+                                            <button type="button" 
+                                                data-id="<?php echo $row['id']; ?>" 
+                                                data-tanggal="<?php echo date('d M Y', strtotime($row['tanggal'])); ?>" 
+                                                data-status="<?php echo $row['status']; ?>" 
+                                                data-catatan="<?php echo $catatan_bersih; ?>" 
+                                                onclick="openModalLogbook(this)" 
+                                                class="text-blue-600 hover:text-blue-800 font-semibold text-xs bg-blue-50 hover:bg-blue-100 px-2.5 py-1.5 rounded-lg transition">
                                                 Detail
                                             </button>
                                         </td>
@@ -365,8 +375,14 @@ require 'proses/proses_dashboard.php'; ?>
             }
         });
 
-        // --- 2. SCRIPT MODAL LOGBOOK ---
-        function openModalLogbook(id, tanggal, status, catatan) {
+        // --- 2. SCRIPT MODAL LOGBOOK (VERSI ANTI-ERROR) ---
+        function openModalLogbook(btn) {
+            // Ambil data dari atribut tombol HTML
+            const id = btn.getAttribute('data-id');
+            const tanggal = btn.getAttribute('data-tanggal');
+            const status = btn.getAttribute('data-status');
+            const catatan = btn.getAttribute('data-catatan');
+
             const modal = document.getElementById('logbookModal');
             const content = document.getElementById('modalContent');
 
@@ -381,6 +397,7 @@ require 'proses/proses_dashboard.php'; ?>
             else if (status === 'Izin') statusText.className += "bg-amber-50 text-amber-600";
             else statusText.className += "bg-rose-50 text-rose-600";
 
+            // Masukkan teks ke dalam textarea logbook
             document.getElementById('modalCatatanInput').value = catatan === '-' ? '' : catatan;
 
             modal.classList.remove('hidden');
@@ -433,5 +450,4 @@ require 'proses/proses_dashboard.php'; ?>
     <?php include 'components/alert.php'; ?>
 
 </body>
-
 </html>
