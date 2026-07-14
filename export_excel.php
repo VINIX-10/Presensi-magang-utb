@@ -121,6 +121,10 @@ if($query_absen->num_rows > 0) {
         // Ambil catatan logbook
         $catatan = !empty($row['catatan']) ? $row['catatan'] : '-';
 
+        // --- TAMBAHAN FIX: Ubah Enter (baris baru) menjadi spasi agar CSV tidak berantakan ---
+        $catatan = str_replace(array("\r\n", "\r", "\n"), ' ', $catatan);
+        // -------------------------------------------------------------------------------------
+
         // Masukkan data per baris ke CSV
         fputcsv($output, [
             $no++, 
