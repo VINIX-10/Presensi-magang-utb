@@ -21,7 +21,7 @@ if (!isset($_SESSION['nama_user']) || !isset($_SESSION['user_id'])) {
     exit;
 }
 
-// 2. Cek Timeout (15 Menit)
+// 2. Cek Timeout (300 detik)
 $timeout_duration = 300; 
 if (isset($_SESSION['last_activity']) && (time() - $_SESSION['last_activity']) > $timeout_duration) {
     session_unset();
