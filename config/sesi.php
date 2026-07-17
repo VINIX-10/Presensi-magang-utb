@@ -1,4 +1,10 @@
 <?php
+// ==========================================================
+// KEAMANAN LEVEL 3: PRODUCTION MODE (Matikan Tampilan Error)
+// ==========================================================
+error_reporting(0);
+ini_set('display_errors', 0);
+// ==========================================================
 session_start();
 
 // Pabrik CSRF Token: Buat token acak jika belum ada di sesi ini
