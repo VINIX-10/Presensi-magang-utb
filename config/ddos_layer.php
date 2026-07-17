@@ -7,7 +7,7 @@ if (session_status() === PHP_SESSION_NONE) {
 // ==========================================================
 // PENGATURAN RATE LIMITING (ANTI-FLOOD / L7 DDOS MITIGATION)
 // ==========================================================
-$batas_request = 20; // Maksimal reload halaman
+$batas_request = 17; // Maksimal reload halaman
 $jeda_waktu = 10;    // Dalam rentang 10 detik
 
 if (!isset($_SESSION['request_count'])) {
