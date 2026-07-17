@@ -1,0 +1,86 @@
+<?php require_once 'absensi/config/ddos_layer.php'; ?>
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Portal Magang - UTB Tracker</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Plus Jakarta Sans', sans-serif; }
+        .bg-pattern {
+            background-color: #F4F7FE;
+            background-image: radial-gradient(#cbd5e1 1px, transparent 1px);
+            background-size: 20px 20px;
+        }
+    </style>
+</head>
+<body class="bg-pattern flex flex-col min-h-screen text-gray-800">
+
+    <nav class="w-full px-8 py-6 flex justify-between items-center bg-white/70 backdrop-blur-md fixed top-0 z-50 border-b border-gray-100 shadow-sm">
+        <div class="flex items-center gap-3 text-blue-600">
+            <svg class="w-8 h-8" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg>
+            <h1 class="text-xl font-bold tracking-wide">UTB Tracker</h1>
+        </div>
+        <div>
+            <span class="bg-blue-100 text-blue-700 px-4 py-1.5 rounded-full text-sm font-semibold">Portal Mahasiswa</span>
+        </div>
+    </nav>
+
+    <main class="flex-1 flex flex-col items-center justify-center text-center px-6 pt-24 pb-12 w-full max-w-4xl mx-auto">
+        
+        <div class="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white border border-gray-200 shadow-sm mb-8 animate-bounce mt-10">
+            <span class="flex w-2 h-2 rounded-full bg-green-500"></span>
+            <span class="text-sm font-medium text-gray-600">Sistem Absensi Aktif & Online</span>
+        </div>
+
+        <h2 class="text-5xl md:text-6xl font-extrabold text-gray-900 mb-6 leading-tight">
+            Sistem Informasi <br>
+            <span class="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-emerald-500">
+                Logbook & Absensi Magang
+            </span>
+        </h2>
+        
+        <p class="text-lg text-gray-500 mb-10 max-w-2xl leading-relaxed">
+            Portal pencatatan waktu kehadiran dan manajemen aktivitas harian mahasiswa Universitas Teknologi Bandung. Akses <em>dashboard</em> untuk mulai mencatat progres hari ini.
+        </p>
+        <!-- Tautan yang mengarah ke dalam folder absensi -->
+        <a href="/absensi/login.php" class="group relative inline-flex items-center justify-center gap-3 px-8 py-4 bg-blue-600 text-white font-bold text-lg rounded-2xl shadow-lg shadow-blue-300 hover:bg-blue-700 hover:shadow-blue-400 hover:-translate-y-1 transition-all duration-300">
+            Masuk ke Dashboard Absensi
+            <svg class="w-5 h-5 transform group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"></path></svg>
+        </a>
+
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mt-20 text-left w-full">
+            <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
+                <div class="w-12 h-12 bg-blue-50 text-blue-600 rounded-xl flex items-center justify-center mb-4">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                </div>
+                <h3 class="font-bold text-gray-800 mb-2">Real-time Tracking</h3>
+                <p class="text-sm text-gray-500">Pencatatan waktu masuk dan keluar secara presisi dengan dukungan sistem PIN.</p>
+            </div>
+            <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
+                <div class="w-12 h-12 bg-emerald-50 text-emerald-600 rounded-xl flex items-center justify-center mb-4">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
+                </div>
+                <h3 class="font-bold text-gray-800 mb-2">Export Laporan</h3>
+                <p class="text-sm text-gray-500">Otomatis generate data absensi ke format Excel yang siap disetorkan.</p>
+            </div>
+            <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
+                <div class="w-12 h-12 bg-amber-50 text-amber-600 rounded-xl flex items-center justify-center mb-4">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path></svg>
+                </div>
+                <h3 class="font-bold text-gray-800 mb-2">Secure & Private</h3>
+                <p class="text-sm text-gray-500">Setiap data kehadiran terenkripsi dan dikelola pada <em>database</em> independen.</p>
+            </div>
+        </div>
+    </main>
+
+    <footer class="w-full py-6 text-center border-t border-gray-200 bg-white">
+        <p class="text-sm text-gray-500 font-medium">
+            Developed by <span class="text-blue-600 font-bold">Alvin Nurfaiz</span> & <span class="text-emerald-600 font-bold">M. Yusman Bayuga</span>
+        </p>
+    </footer>
+
+</body>
+</html>
