@@ -1,4 +1,7 @@
 <?php
+// Memanggil satpam Anti-DDoS Layer 7
+require 'config/ddos_layer.php';
+
 // Memanggil file otak backend (Logika, Query, dan Pengecekan Sesi) 
 require 'proses/proses_dashboard.php'; ?>
 <!DOCTYPE html>
@@ -269,12 +272,12 @@ require 'proses/proses_dashboard.php'; ?>
                                             <?php endif; ?>
                                         </td>
                                         <td class="p-4 text-center">
-                                            <button type="button" 
-                                                data-id="<?php echo $row['id']; ?>" 
-                                                data-tanggal="<?php echo date('d M Y', strtotime($row['tanggal'])); ?>" 
-                                                data-status="<?php echo $row['status']; ?>" 
-                                                data-catatan="<?php echo $catatan_bersih; ?>" 
-                                                onclick="openModalLogbook(this)" 
+                                            <button type="button"
+                                                data-id="<?php echo $row['id']; ?>"
+                                                data-tanggal="<?php echo date('d M Y', strtotime($row['tanggal'])); ?>"
+                                                data-status="<?php echo $row['status']; ?>"
+                                                data-catatan="<?php echo $catatan_bersih; ?>"
+                                                onclick="openModalLogbook(this)"
                                                 class="text-blue-600 hover:text-blue-800 font-semibold text-xs bg-blue-50 hover:bg-blue-100 px-2.5 py-1.5 rounded-lg transition">
                                                 Detail
                                             </button>
@@ -424,7 +427,7 @@ require 'proses/proses_dashboard.php'; ?>
             // Ambil teks dari kotak pencarian dan ubah jadi huruf kecil semua
             let input = document.getElementById("searchInput");
             let filter = input.value.toLowerCase();
-            
+
             // Ambil elemen tbody dari tabel riwayat
             let tbody = document.querySelector("table tbody");
             let tr = tbody.getElementsByTagName("tr");
@@ -432,11 +435,11 @@ require 'proses/proses_dashboard.php'; ?>
             // Lakukan perulangan untuk mengecek setiap baris tabel
             for (let i = 0; i < tr.length; i++) {
                 // Jangan sembunyikan baris kalau isinya tulisan "Belum ada riwayat"
-                if (tr[i].getElementsByTagName("td").length === 1) continue; 
+                if (tr[i].getElementsByTagName("td").length === 1) continue;
 
                 // Gabungkan semua teks di dalam baris tersebut agar bisa dicari
                 let rowText = tr[i].innerText.toLowerCase();
-                
+
                 // Jika teks yang dicari ada di baris tersebut, tampilkan. Kalau tidak, sembunyikan.
                 if (rowText.indexOf(filter) > -1) {
                     tr[i].style.display = "";
@@ -450,4 +453,5 @@ require 'proses/proses_dashboard.php'; ?>
     <?php include 'components/alert.php'; ?>
 
 </body>
+
 </html>
