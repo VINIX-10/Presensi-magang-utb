@@ -10,7 +10,7 @@ if (!isset($milestone_list)) {
         '07' => [
             'judul' => 'Milestone 1 (Juli)', 
             'status' => 'Selesai', 
-            'operasional' => 'Penginputan & rekapitulasi data harian finansial (Tabungan, Giro, Depo) Uker Sumedang ke Excel.', 
+            'operasional' => 'Penginputan & rekapitulasi data harian finansial Uker Sumedang ke Excel.', 
             'it' => 'Analisis kelemahan sistem absen fisik pemagang & perancangan basis data Tracker.'
         ],
         '08' => [
@@ -60,7 +60,7 @@ if (!isset($milestone_list)) {
                     <p class="text-sm text-gray-400">Sinkronisasi target bulanan industri dengan agenda akademik kampus Anda.</p>
                 </div>
                 
-                <button onclick="bukaModalCRUD('create')" class="bg-blue-600 hover:bg-blue-700 text-white font-bold px-5 py-2.5 rounded-xl shadow-lg shadow-blue-200 transition text-sm flex items-center gap-2">
+                <button onclick="bukaModalCRUD('create', '', '', 'Industri', '', '08:00', '12', '')" class="bg-blue-600 hover:bg-blue-700 text-white font-bold px-5 py-2.5 rounded-xl shadow-lg shadow-blue-200 transition text-sm flex items-center gap-2">
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
                     </svg>
@@ -106,18 +106,21 @@ if (!isset($milestone_list)) {
                                 
                                 $warna = 'gray'; $icon = '📅';
                                 if ($agenda['kategori'] == 'Industri') { $warna = 'emerald'; $icon = '💼'; }
-                                elseif ($agenda['kategori'] == 'Kampus') { $warna = 'blue'; $icon = '🎓'; }
+                                elseif ($agenda['kategori'] == 'Campus') { $warna = 'blue'; $icon = '🎓'; }
                                 elseif ($agenda['kategori'] == 'Lembur') { $warna = 'purple'; $icon = '⚡'; }
+
+                                $jam_tampil = isset($agenda['waktu']) ? substr($agenda['waktu'], 0, 5) : '08:00';
+                                $offset_tampil = $agenda['pengingat_offset'] ?? '12';
                         ?>
                             <div class="min-h-[90px] bg-white border-2 border-<?= $warna; ?>-400 shadow-sm rounded-2xl p-2 flex flex-col justify-between cursor-pointer hover:shadow transition" 
-                                 onclick="bukaModalCRUD('edit', '<?= $agenda['id']; ?>', '<?= addslashes($agenda['judul']); ?>', '<?= $agenda['kategori']; ?>', '<?= $agenda['tanggal']; ?>', '<?= addslashes($agenda['deskripsi']); ?>')">
+                                 onclick="bukaModalCRUD('edit', '<?= $agenda['id']; ?>', '<?= addslashes($agenda['judul']); ?>', '<?= $agenda['kategori']; ?>', '<?= $agenda['tanggal']; ?>', '<?= $jam_tampil; ?>', '<?= $offset_tampil; ?>', '<?= addslashes($agenda['deskripsi']); ?>')">
                                 <span class="font-bold text-sm text-<?= $warna; ?>-600"><?= $d; ?></span>
                                 <span class="bg-<?= $warna; ?>-50 text-<?= $warna; ?>-700 text-[10px] font-bold py-1 px-1.5 rounded-lg block truncate"><?= $icon; ?> <?= htmlspecialchars($agenda['judul']); ?></span>
                             </div>
 
                         <?php else: ?>
                             <div class="min-h-[90px] bg-white border border-gray-100 rounded-2xl p-2 relative flex flex-col justify-between hover:border-blue-300 transition cursor-pointer"
-                                 onclick="bukaModalCRUD('create', '', '', 'Industri', '<?= $tanggal_format; ?>', '')">
+                                 onclick="bukaModalCRUD('create', '', '', 'Industri', '<?= $tanggal_format; ?>', '08:00', '12', '')">
                                 <span class="font-bold text-sm text-gray-400"><?= $d; ?></span>
                             </div>
                         <?php endif; ?>
@@ -131,7 +134,6 @@ if (!isset($milestone_list)) {
                     <div class="relative pl-6 border-l-2 border-gray-100 space-y-8">
                         
                         <?php foreach ($milestone_list as $bln_key => $ms): 
-                            // Penentuan warna badge status secara dinamis
                             $tag_warna = 'gray';
                             if ($ms['status'] === 'Selesai') $tag_warna = 'emerald';
                             elseif ($ms['status'] === 'Berjalan') $tag_warna = 'blue';
@@ -175,6 +177,7 @@ if (!isset($milestone_list)) {
         </div>
     </main>
 
+    <!-- MODAL CRUD AGENDA MANDIRI -->
     <div id="crudModal" class="fixed inset-0 z-50 flex items-center justify-center hidden bg-black/50 p-4 backdrop-blur-sm transition-all">
         <div class="bg-white rounded-3xl w-full max-w-md p-6 shadow-2xl border border-gray-100 transform transition-all scale-95 opacity-0 duration-300" id="modalBox">
             
@@ -211,6 +214,22 @@ if (!isset($milestone_list)) {
                         </div>
                     </div>
 
+                    <!-- PENGATURAN JAM MULAI & JEDA OFFSET BARU -->
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-sm font-semibold text-gray-600 mb-1">Jam Mulai Agenda</label>
+                            <input type="time" name="waktu_agenda" id="in-waktu" required class="w-full bg-gray-50 border border-gray-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:border-blue-500 text-gray-700 font-medium">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-semibold text-gray-600 mb-1">Ingatkan Saya</label>
+                            <select name="pengingat_offset" id="in-offset" class="w-full bg-gray-50 border border-gray-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:border-blue-500 text-gray-700 font-medium">
+                                <option value="1">1 Jam Sebelum Agenda</option>
+                                <option value="12">12 Jam Sebelum (H-1)</option>
+                                <option value="20">20 Jam Sebelum Simulasi</option>
+                            </select>
+                        </div>
+                    </div>
+
                     <div>
                         <label class="block text-sm font-semibold text-gray-600 mb-1">Deskripsi Kegiatan</label>
                         <textarea name="deskripsi_agenda" id="in-deskripsi" rows="3" placeholder="Tuliskan detail deskripsi kegiatan agenda..." class="w-full bg-gray-50 border border-gray-200 rounded-xl p-4 text-sm focus:outline-none focus:border-blue-500 placeholder-gray-400 resize-none text-gray-700 font-medium"></textarea>
@@ -235,6 +254,7 @@ if (!isset($milestone_list)) {
         </div>
     </div>
 
+    <!-- MODAL EDIT TARGET MILESTONE -->
     <div id="milestoneModal" class="fixed inset-0 z-50 flex items-center justify-center hidden bg-black/50 p-4 backdrop-blur-sm transition-all">
         <div class="bg-white rounded-3xl w-full max-w-md p-6 shadow-2xl border border-gray-100 transform transition-all scale-95 opacity-0 duration-300" id="milestoneModalBox">
             
@@ -261,12 +281,12 @@ if (!isset($milestone_list)) {
 
                     <div>
                         <label class="block text-sm font-semibold text-gray-600 mb-1">Deskripsi Target Operasional / Finansial</label>
-                        <textarea name="operasional_milestone" id="ms-operasional" rows="3" required placeholder="Contoh: Rekapitulasi target nominal Tabungan/Giro..." class="w-full bg-gray-50 border border-gray-200 rounded-xl p-4 text-sm focus:outline-none focus:border-blue-500 placeholder-gray-400 resize-none text-gray-700 font-medium"></textarea>
+                        <textarea name="operasional_milestone" id="ms-operasional" rows="3" required placeholder="Contoh: Rekapitulasi target nominal Tabungan/Giro..." class="w-full bg-gray-50 border border-gray-200 rounded-xl p-4 text-sm focus:outline-none focus:border-blue-500 text-gray-700 font-medium"></textarea>
                     </div>
 
                     <div>
                         <label class="block text-sm font-semibold text-gray-600 mb-1">Deskripsi Target Pengembangan IT</label>
-                        <textarea name="it_milestone" id="ms-it" rows="3" required placeholder="Contoh: Implementasi modul database & security..." class="w-full bg-gray-50 border border-gray-200 rounded-xl p-4 text-sm focus:outline-none focus:border-blue-500 placeholder-gray-400 resize-none text-gray-700 font-medium"></textarea>
+                        <textarea name="it_milestone" id="ms-it" rows="3" required placeholder="Contoh: Implementasi modul database & security..." class="w-full bg-gray-50 border border-gray-200 rounded-xl p-4 text-sm focus:outline-none focus:border-blue-500 text-gray-700 font-medium"></textarea>
                     </div>
                 </div>
 
@@ -287,12 +307,15 @@ if (!isset($milestone_list)) {
         const modal = document.getElementById('crudModal');
         const modalBox = document.getElementById('modalBox');
 
-        function bukaModalCRUD(mode, id = '', judul = '', kategori = 'Industri', tanggal = '', deskripsi = '') {
+        // SINKRONISASI PENGATURAN DEFAULT JAM MULAI & OFFSET
+        function bukaModalCRUD(mode, id = '', judul = '', kategori = 'Industri', tanggal = '', waktu = '08:00', offset = '12', deskripsi = '') {
             document.getElementById('actionInput').value = mode;
             document.getElementById('idAgendaInput').value = id;
             document.getElementById('in-judul').value = judul;
             document.getElementById('in-kategori').value = kategori;
             document.getElementById('in-tanggal').value = tanggal;
+            document.getElementById('in-waktu').value = waktu;
+            document.getElementById('in-offset').value = offset;
             document.getElementById('in-deskripsi').value = deskripsi;
 
             const title = document.getElementById('modalTitle');
@@ -324,9 +347,7 @@ if (!isset($milestone_list)) {
             }, 200);
         }
 
-        // =========================================================================
-        // SCRIPT MILESTONE MODAL CONTROLLER (BARU)
-        // =========================================================================
+        // SCRIPT MILESTONE MODAL CONTROLLER
         const milestoneModal = document.getElementById('milestoneModal');
         const milestoneModalBox = document.getElementById('milestoneModalBox');
 
@@ -352,7 +373,7 @@ if (!isset($milestone_list)) {
             }, 200);
         }
 
-        // SCRIPT SIDEBAR MOBILE (SOLUSI BUG HAMBURGER MENU)
+        // SCRIPT SIDEBAR MOBILE
         document.addEventListener('DOMContentLoaded', () => {
             const sidebar = document.getElementById('sidebar');
             const mobileMenuBtn = document.getElementById('mobileMenuBtn');
@@ -373,6 +394,58 @@ if (!isset($milestone_list)) {
             }
         });
     </script>
+
+    <!-- ========================================================================= -->
+    <!-- POP-UP REMINDER PENGINGAT H-1 AGENDA DENGAN FITUR ANTI-REPEATED POPUP     -->
+    <!-- ========================================================================= -->
+    <?php if (isset($agenda_besok) && $agenda_besok): ?>
+    <div id="reminderModal" class="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm transition-all hidden">
+        <div class="bg-white rounded-3xl w-full max-w-sm p-6 shadow-2xl border border-amber-100 transform transition-all scale-100 opacity-100">
+            
+            <div class="w-14 h-14 bg-amber-50 text-amber-500 rounded-full flex items-center justify-center mx-auto mb-4 border border-amber-200 animate-bounce">
+                <svg class="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                </svg>
+            </div>
+
+            <div class="text-center mb-6">
+                <h3 class="text-lg font-bold text-gray-800 mb-1">Pengingat Agenda Besok!</h3>
+                
+                <p class="text-xs text-amber-600 font-semibold bg-amber-50 inline-block px-3 py-1 rounded-full mb-3">
+                    ⏰ Mulai Jam <?= date('H:i', strtotime($agenda_besok['waktu'])); ?> WIB 
+                    <span class="block text-[10px] text-amber-500 font-normal mt-0.5">
+                        (Diingatkan <?= $agenda_besok['offset']; ?> jam sebelum acara)
+                    </span>
+                </p>
+                
+                <div class="bg-gray-50 p-3 rounded-xl border border-gray-100 text-left">
+                    <p class="text-sm font-bold text-gray-700"><?= htmlspecialchars($agenda_besok['judul']); ?></p>
+                    <p class="text-xs text-gray-400 mt-1"><?= htmlspecialchars($agenda_besok['deskripsi'] ?: 'Tidak ada deskripsi tambahan.'); ?></p>
+                </div>
+            </div>
+
+            <button onclick="tutupReminderPermanen('<?= $agenda_besok['tanggal']; ?>')" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 rounded-xl shadow-lg shadow-blue-100 transition text-sm">
+                Saya Mengerti
+            </button>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const tanggalAgenda = '<?= $agenda_besok['tanggal']; ?>';
+            const statusDitutup = localStorage.getItem('reminder_dismissed_' + tanggalAgenda);
+            
+            if (!statusDitutup) {
+                document.getElementById('reminderModal').classList.remove('hidden');
+            }
+        });
+
+        function tutupReminderPermanen(tanggal) {
+            localStorage.setItem('reminder_dismissed_' + tanggal, 'true');
+            document.getElementById('reminderModal').classList.add('hidden');
+        }
+    </script>
+    <?php endif; ?>
 
     <?php include 'components/alert.php'; ?>
 </body>
