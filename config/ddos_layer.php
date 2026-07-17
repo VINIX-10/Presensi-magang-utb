@@ -1,44 +1,95 @@
 <?php
-// Pastikan sesi sudah berjalan untuk melacak user
-if (session_status() === PHP_SESSION_NONE) {
-    session_start();
+// ==========================================================
+// IP-BASED RATE LIMITER & PENALTY BOX (ANTI-DDOS LAYER 7)
+// ==========================================================
+$batas_request = 20;        // Maksimal request (Bisa diganti ke 3 untuk testing)
+$jeda_waktu = 10;           // Dalam rentang 10 detik
+$waktu_hukuman = 300;       // HUKUMAN: Diblokir 300 detik (5 menit)
+
+// 1. TANGKAP IP ADDRESS PENGUNJUNG
+$ip_address = $_SERVER['REMOTE_ADDR'];
+
+// Ubah IP menjadi hash MD5 agar nama file aman dan rapi
+$nama_file = md5($ip_address) . '.json';
+
+// Tentukan lokasi folder untuk menyimpan catatan IP
+$dir_log = __DIR__ . '/ddos_logs/';
+$file_path = $dir_log . $nama_file;
+
+// 2. BUAT FOLDER OTOMATIS JIKA BELUM ADA
+if (!is_dir($dir_log)) {
+    mkdir($dir_log, 0777, true);
 }
 
-// ==========================================================
-// PENGATURAN RATE LIMITING (ANTI-FLOOD / L7 DDOS MITIGATION)
-// ==========================================================
-$batas_request = 17; // Maksimal reload halaman
-$jeda_waktu = 10;    // Dalam rentang 10 detik
-
-if (!isset($_SESSION['request_count'])) {
-    // Kunjungan pertama
-    $_SESSION['request_count'] = 1;
-    $_SESSION['waktu_request_pertama'] = time();
-} else {
-    // Tambah hitungan setiap kali halaman dimuat
-    $_SESSION['request_count']++;
-    
-    // Hitung berapa detik yang sudah berlalu sejak request pertama
-    $waktu_berlalu = time() - $_SESSION['waktu_request_pertama'];
-    
-    if ($waktu_berlalu < $jeda_waktu) {
-        // Jika dalam 10 detik dia reload lebih dari 15 kali -> BLOKIR!
-        if ($_SESSION['request_count'] > $batas_request) {
-            
-            // Berikan header error 429 (Terlalu Banyak Request) agar bot kebingungan
-            header('HTTP/1.1 429 Too Many Requests');
-            
-            // DIE() akan mematikan proses PHP saat itu juga. 
-            // Server tidak perlu capek meload HTML, CSS, atau Database.
-            die("<h1 style='font-family: sans-serif; text-align: center; margin-top: 20%; color: #ef4444;'>
-                    ⚠️ Akses Diblokir Sementara (Error 429) <br>
-                    <span style='font-size: 16px; color: #6b7280;'>Terdeteksi aktivitas tidak wajar (Spam/DDoS). Harap tunggu beberapa detik sebelum mencoba lagi.</span>
-                 </h1>");
+// --- FITUR BARU: TUKANG SAPU (GARBAGE COLLECTOR) ---
+// Membersihkan file log IP yang sudah berumur lebih dari 1 hari (86400 detik).
+// Berjalan secara acak (probabilitas 5%) agar tidak membebani server setiap kali di-load.
+if (rand(1, 100) <= 5) {
+    $files = glob($dir_log . '*.json');
+    $waktu_sekarang = time();
+    if ($files) {
+        foreach ($files as $file) {
+            if (is_file($file) && ($waktu_sekarang - filemtime($file) > 86400)) {
+                unlink($file); 
+            }
         }
-    } else {
-        // Jika sudah lewat 10 detik dan aman, reset ulang hitungannya dari nol
-        $_SESSION['request_count'] = 1;
-        $_SESSION['waktu_request_pertama'] = time();
     }
 }
+// ---------------------------------------------------
+
+// 3. BACA CATATAN IP DARI FILE JSON
+if (file_exists($file_path)) {
+    // Ambil log yang sudah ada
+    $log_data = json_decode(file_get_contents($file_path), true);
+} else {
+    // Jika IP baru pertama kali datang, buat data awal
+    $log_data = [
+        'request_count' => 0,
+        'waktu_awal' => time(),
+        'banned_until' => 0
+    ];
+}
+
+$waktu_sekarang = time();
+
+// 4. EKSEKUSI HUKUMAN (JIKA MASIH DALAM MASA BLOKIR)
+if ($log_data['banned_until'] > $waktu_sekarang) {
+    $sisa_waktu = $log_data['banned_until'] - $waktu_sekarang;
+    header('HTTP/1.1 429 Too Many Requests');
+    die("<h1 style='font-family: sans-serif; text-align: center; margin-top: 20%; color: #ef4444;'>
+            ⚠️ Akses Diblokir! (Error 429) <br>
+            <span style='font-size: 16px; color: #6b7280;'>
+                IP Anda (<b>{$ip_address}</b>) terdeteksi melakukan spam. <br>
+                Silakan tunggu <b>{$sisa_waktu} detik</b> lagi untuk mengakses web ini.
+            </span>
+         </h1>");
+}
+
+// 5. HITUNG JEDA WAKTU UNTUK PENGUNJUNG NORMAL
+$waktu_berlalu = $waktu_sekarang - $log_data['waktu_awal'];
+
+if ($waktu_berlalu < $jeda_waktu) {
+    $log_data['request_count']++;
+    
+    // JIKA NGE-SPAM MELEBIHI BATAS -> PENJARA 5 MENIT!
+    if ($log_data['request_count'] > $batas_request) {
+        $log_data['banned_until'] = $waktu_sekarang + $waktu_hukuman;
+        
+        // Simpan palu hakim ke file sebelum memutus koneksi
+        file_put_contents($file_path, json_encode($log_data));
+        
+        header('HTTP/1.1 429 Too Many Requests');
+        die("<h1 style='font-family: sans-serif; text-align: center; margin-top: 20%; color: #ef4444;'>
+                ⚠️ Terdeteksi Serangan! (Error 429) <br>
+                <span style='font-size: 16px; color: #6b7280;'>IP Anda diblokir selama 5 menit tanpa ampun.</span>
+             </h1>");
+    }
+} else {
+    // Jika jeda waktu aman (lebih dari 10 detik tanpa melanggar), reset ulang hitungan
+    $log_data['request_count'] = 1;
+    $log_data['waktu_awal'] = $waktu_sekarang;
+}
+
+// 6. SIMPAN LOG AKTIVITAS TERBARU KE FILE
+file_put_contents($file_path, json_encode($log_data));
 ?>
