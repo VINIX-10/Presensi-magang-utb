@@ -56,9 +56,16 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     
     // B. LOGIKA ABSEN PULANG
     elseif (isset($_POST['submit_pulang'])) {
-        $update = $conn->query("UPDATE kehadiran SET waktu_keluar = '$waktu_sekarang' WHERE user_id = '$user_id' AND tanggal = '$tanggal_hari_ini'");
-        if ($update) {
+        // MENGGUNAKAN PREPARED STATEMENTS (ANTI SQL INJECTION)
+        $stmt_pulang = $conn->prepare("UPDATE kehadiran SET waktu_keluar = ? WHERE user_id = ? AND tanggal = ?");
+        
+        // s = string (waktu), i = integer (user_id), s = string (tanggal)
+        $stmt_pulang->bind_param("sis", $waktu_sekarang, $user_id, $tanggal_hari_ini);
+        
+        if ($stmt_pulang->execute()) {
             $pesan_alert = "Absen PULANG berhasil dicatat! Selamat beristirahat.";
+        } else {
+            $pesan_alert = "Gagal mencatat absen pulang.";
         }
     }
     
