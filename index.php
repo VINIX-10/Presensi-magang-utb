@@ -1,7 +1,4 @@
 <?php
-// Memanggil satpam Anti-DDoS Layer 7
-require 'config/ddos_layer.php';
-
 // Memanggil file otak backend (Logika, Query, dan Pengecekan Sesi) 
 require 'proses/proses_dashboard.php'; ?>
 <!DOCTYPE html>
