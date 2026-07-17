@@ -80,7 +80,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
 $bulan_aktif = isset($_GET['bulan']) ? sprintf('%02d', $_GET['bulan']) : '07';
 $tahun_aktif = '2026';
 
-//konfersi angka ke nama bulan
+// Konversi angka ke nama bulan
 $nama_bulan_indo = [
     '07' => 'Juli 2026',
     '08' => 'Agustus 2026',
@@ -156,14 +156,39 @@ function hariIndo(string $tanggal)
 {
     $hari_inggris = date('l', strtotime($tanggal));
     $daftar_hari = [
-        'Sunday' => 'Minggu',
-        'Monday' => 'Senin',
-        'Tuesday' => 'Selasa',
-        'Wednesday' => 'Rabu',
-        'Thursday' => 'Kamis',
-        'Friday' => 'Jumat',
-        'Saturday' => 'Sabtu'
+        'Sunday' => 'Minggu', 'Monday' => 'Senin', 'Tuesday' => 'Selasa',
+        'Wednesday' => 'Rabu', 'Thursday' => 'Kamis', 'Friday' => 'Jumat', 'Saturday' => 'Sabtu'
     ];
     return $daftar_hari[$hari_inggris];
+}
+
+// =========================================================================
+// 7. FITUR PENGINGAT DENGAN PENGATURAN JAM & OFFSET (VERSI STATIS MOCK)
+// =========================================================================
+// Simulasi: Membuat agenda Besok (18 Juli 2026) Jam 08:00 Pagi sesuai request Anda
+$mock_agenda_besok = [
+    'judul'              => 'Demo Aplikasi UTB Tracker & Sinkronisasi Fitur CRUD',
+    'tanggal_pelaksanaan'=> '2026-07-18',
+    'waktu_mulai'        => '08:00:00', // Agenda besok jam 8 pagi
+    'deskripsi'          => 'Mempersiapkan demonstrasi fungsionalitas kalender mandiri dan evaluasi milestone di depan dosen.',
+    'pengingat_offset'   => 20          // Jeda mundur 20 jam agar lolos validasi waktu server siang ini
+];
+
+// Logika hitung mundur deteksi kecocokan waktu
+$waktu_sekarang_ts = time(); 
+$agenda_target_ts  = strtotime($mock_agenda_besok['tanggal_pelaksanaan'] . ' ' . $mock_agenda_besok['waktu_mulai']);
+$offset_detik      = $mock_agenda_besok['pengingat_offset'] * 3600; 
+$waktu_mulai_ingatkan_ts = $agenda_target_ts - $offset_detik;
+
+$agenda_besok = null;
+// Jika waktu server sekarang sudah masuk waktu pengingat, kirim data ke frontend
+if ($waktu_sekarang_ts >= $waktu_mulai_ingatkan_ts) {
+    $agenda_besok = [
+        'judul'     => $mock_agenda_besok['judul'],
+        'waktu'     => $mock_agenda_besok['waktu_mulai'],
+        'offset'    => $mock_agenda_besok['pengingat_offset'],
+        'deskripsi' => $mock_agenda_besok['deskripsi'],
+        'tanggal'   => $mock_agenda_besok['tanggal_pelaksanaan'] // Ditambahkan sebagai ID unik penutupan modal
+    ];
 }
 ?>
