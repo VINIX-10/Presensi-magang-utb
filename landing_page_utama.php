@@ -1,4 +1,4 @@
-<?php require_once 'absensi/config/ddos_layer.php'; ?>
+<?php require_once __DIR__ . '/config/ddos_layer.php'; ?>
 <!DOCTYPE html>
 <html lang="id">
 <head>
