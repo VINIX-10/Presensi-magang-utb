@@ -3,7 +3,7 @@ CREATE DATABASE IF NOT EXISTS absensi_db;
 USE absensi_db;
 
 -- --------------------------------------------------------
--- 1. Struktur dari tabel `users` 'pengguna'
+-- 1. Struktur dari tabel `users`
 -- --------------------------------------------------------
 CREATE TABLE IF NOT EXISTS `users` (
   `id` int(11) NOT NULL AUTO_INCREMENT,
@@ -11,16 +11,14 @@ CREATE TABLE IF NOT EXISTS `users` (
   `nim` varchar(20) NOT NULL,
   `kelas` varchar(50) NOT NULL,
   `konsentrasi` varchar(100) NOT NULL,
-  `pin` varchar(255) NOT NULL, -- Diperbesar ke 255 karakter untuk menampung hash Bcrypt yang aman
-  `failed_attempts` int(11) NOT NULL DEFAULT 0, -- Kolom untuk mencatat jumlah kesalahan input PIN berturut-turut
-  `lockout_time` datetime DEFAULT NULL, -- Kolom untuk mencatat batas akhir waktu pemblokiran akun
+  `pin` varchar(255) NOT NULL, 
+  `failed_attempts` int(11) NOT NULL DEFAULT 0, 
+  `lockout_time` datetime DEFAULT NULL, 
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 -- --------------------------------------------------------
 -- 2. Memasukkan data awal (Default User) ke tabel `users`
--- Catatan: Ganti teks dalam kurung siku dengan string hash Bcrypt 
--- yang dihasilkan oleh file generator PIN milikmu.
 -- default password 1234
 -- --------------------------------------------------------
 INSERT INTO `users` (`nama_user`, `nim`, `kelas`, `konsentrasi`, `pin`, `failed_attempts`, `lockout_time`) VALUES
@@ -36,15 +34,15 @@ CREATE TABLE IF NOT EXISTS `kehadiran` (
   `tanggal` date NOT NULL,
   `waktu_masuk` time NOT NULL,
   `waktu_keluar` time DEFAULT NULL, 
-  `status` enum('Hadir','Sakit','Izin','Lembur') NOT NULL, -- Ditambahkan opsi 'Lembur' untuk absensi akhir pekan
-  `catatan` text DEFAULT NULL, -- Kolom logbook harian aktivitas magang
+  `status` enum('Hadir','Sakit','Izin','Lembur') NOT NULL, 
+  `catatan` text DEFAULT NULL, 
   PRIMARY KEY (`id`),
   KEY `user_id` (`user_id`),
   CONSTRAINT `fk_user_kehadiran` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE ON UPDATE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 -- --------------------------------------------------------
--- 4. Struktur dari tabel `agenda` 
+-- 4. Struktur dari tabel `agenda` (SUDAH DIREVISI)
 -- --------------------------------------------------------
 CREATE TABLE IF NOT EXISTS `agenda` (
   `id` int(11) NOT NULL AUTO_INCREMENT,
@@ -52,6 +50,8 @@ CREATE TABLE IF NOT EXISTS `agenda` (
   `judul` varchar(255) NOT NULL,
   `kategori` enum('Industri','Kampus','Lembur') NOT NULL,
   `tanggal` date NOT NULL,
+  `waktu` time NOT NULL, -- [BARU] Untuk menyimpan jam mulai agenda (08:00, dll)
+  `pengingat_offset` int(11) NOT NULL DEFAULT 12, -- [BARU] Untuk menyimpan jeda pengingat (1, 12, atau 20)
   `deskripsi` text DEFAULT NULL,
   PRIMARY KEY (`id`),
   KEY `user_id` (`user_id`),
@@ -59,13 +59,12 @@ CREATE TABLE IF NOT EXISTS `agenda` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 -- --------------------------------------------------------
--- 5. Struktur Milestone Edit
+-- 5. Struktur dari tabel `milestones`
 -- --------------------------------------------------------
-
 CREATE TABLE IF NOT EXISTS `milestones` (
   `id` int(11) NOT NULL AUTO_INCREMENT,
   `user_id` int(11) NOT NULL,
-  `bulan_key` varchar(2) NOT NULL, -- Menyimpan '07', '08', '09', '10'
+  `bulan_key` varchar(2) NOT NULL, 
   `judul` varchar(50) NOT NULL,
   `status` enum('Pending','Berjalan','Selesai') NOT NULL DEFAULT 'Pending',
   `operasional` text DEFAULT NULL,
