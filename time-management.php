@@ -105,15 +105,17 @@ if (!isset($milestone_list)) {
                                 $agenda = $agenda_list[$d];
                                 
                                 $warna = 'gray'; $icon = '📅';
+                                // FIX: Menyamakan kondisi pencarian Kategori dengan Enum Database
                                 if ($agenda['kategori'] == 'Industri') { $warna = 'emerald'; $icon = '💼'; }
-                                elseif ($agenda['kategori'] == 'Campus') { $warna = 'blue'; $icon = '🎓'; }
+                                elseif ($agenda['kategori'] == 'Kampus') { $warna = 'blue'; $icon = '🎓'; } 
                                 elseif ($agenda['kategori'] == 'Lembur') { $warna = 'purple'; $icon = '⚡'; }
 
                                 $jam_tampil = isset($agenda['waktu']) ? substr($agenda['waktu'], 0, 5) : '08:00';
                                 $offset_tampil = $agenda['pengingat_offset'] ?? '12';
                         ?>
+                            <!-- FIX: Menambahkan ?? '' di dalam fungsi addslashes() -->
                             <div class="min-h-[90px] bg-white border-2 border-<?= $warna; ?>-400 shadow-sm rounded-2xl p-2 flex flex-col justify-between cursor-pointer hover:shadow transition" 
-                                 onclick="bukaModalCRUD('edit', '<?= $agenda['id']; ?>', '<?= addslashes($agenda['judul']); ?>', '<?= $agenda['kategori']; ?>', '<?= $agenda['tanggal']; ?>', '<?= $jam_tampil; ?>', '<?= $offset_tampil; ?>', '<?= addslashes($agenda['deskripsi']); ?>')">
+                                 onclick="bukaModalCRUD('edit', '<?= $agenda['id']; ?>', '<?= addslashes($agenda['judul'] ?? ''); ?>', '<?= $agenda['kategori']; ?>', '<?= $agenda['tanggal']; ?>', '<?= $jam_tampil; ?>', '<?= $offset_tampil; ?>', '<?= addslashes($agenda['deskripsi'] ?? ''); ?>')">
                                 <span class="font-bold text-sm text-<?= $warna; ?>-600"><?= $d; ?></span>
                                 <span class="bg-<?= $warna; ?>-50 text-<?= $warna; ?>-700 text-[10px] font-bold py-1 px-1.5 rounded-lg block truncate"><?= $icon; ?> <?= htmlspecialchars($agenda['judul']); ?></span>
                             </div>
@@ -155,7 +157,8 @@ if (!isset($milestone_list)) {
                                         <p class="text-xs text-<?= $tag_warna; ?>-600 font-semibold mb-1">Status: <?= htmlspecialchars($ms['status']); ?></p>
                                     </div>
                                     
-                                    <button onclick="bukaModalMilestone('<?= $bln_key; ?>', '<?= addslashes($ms['judul']); ?>', '<?= $ms['status']; ?>', '<?= addslashes($ms['operasional']); ?>', '<?= addslashes($ms['it']); ?>')" 
+                                    <!-- FIX: Menambahkan ?? '' di dalam fungsi addslashes() -->
+                                    <button onclick="bukaModalMilestone('<?= $bln_key; ?>', '<?= addslashes($ms['judul'] ?? ''); ?>', '<?= $ms['status']; ?>', '<?= addslashes($ms['operasional'] ?? ''); ?>', '<?= addslashes($ms['it'] ?? ''); ?>')" 
                                             class="text-gray-400 hover:text-blue-600 p-2 rounded-xl hover:bg-gray-50 transition opacity-100 lg:opacity-0 lg:group-hover:opacity-100 focus:opacity-100" title="Ubah Milestone">
                                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"></path>
@@ -164,8 +167,8 @@ if (!isset($milestone_list)) {
                                 </div>
 
                                 <div class="text-xs <?= $ms['status'] === 'Pending' ? 'text-gray-400' : 'text-gray-500'; ?> space-y-1 bg-gray-50 p-2.5 rounded-xl mt-1">
-                                    <p><strong>Operasional:</strong> <?= htmlspecialchars($ms['operasional']); ?></p>
-                                    <p><strong>Inisiatif IT:</strong> <?= htmlspecialchars($ms['it']); ?></p>
+                                    <p><strong>Operasional:</strong> <?= htmlspecialchars($ms['operasional'] ?? ''); ?></p>
+                                    <p><strong>Inisiatif IT:</strong> <?= htmlspecialchars($ms['it'] ?? ''); ?></p>
                                 </div>
                             </div>
                         <?php endforeach; ?>
@@ -204,7 +207,8 @@ if (!isset($milestone_list)) {
                             <label class="block text-sm font-semibold text-gray-600 mb-1">Kategori</label>
                             <select name="kategori" id="in-kategori" class="w-full bg-gray-50 border border-gray-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:border-blue-500 text-gray-700 font-medium">
                                 <option value="Industri">Industri</option>
-                                <option value="Campaign">Kampus</option>
+                                <!-- FIX: Diubah valuenya menjadi Kampus agar sinkron dengan Database -->
+                                <option value="Kampus">Kampus</option>
                                 <option value="Lembur">Lembur</option>
                             </select>
                         </div>
@@ -214,7 +218,6 @@ if (!isset($milestone_list)) {
                         </div>
                     </div>
 
-                    <!-- PENGATURAN JAM MULAI & JEDA OFFSET BARU -->
                     <div class="grid grid-cols-2 gap-4">
                         <div>
                             <label class="block text-sm font-semibold text-gray-600 mb-1">Jam Mulai Agenda</label>
