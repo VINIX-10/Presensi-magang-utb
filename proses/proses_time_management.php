@@ -38,18 +38,24 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         $kategori = htmlspecialchars($_POST['kategori'], ENT_QUOTES, 'UTF-8');
         $tanggal = htmlspecialchars($_POST['tanggal_agenda'], ENT_QUOTES, 'UTF-8');
         $deskripsi = htmlspecialchars($_POST['deskripsi_agenda'], ENT_QUOTES, 'UTF-8');
+        
+        // [PENAMBAHAN KEKURANGAN]: Menangkap Jam dan Offset
+        $waktu = htmlspecialchars($_POST['waktu_agenda'], ENT_QUOTES, 'UTF-8');
+        $offset = (int)$_POST['pengingat_offset'];
 
         // Keamanan ekstra: query dipisah berdasarkan tipe action yang dikirim dari Frontend
         if ($action == 'create') {
-            $stmt = $conn->prepare("INSERT INTO agenda (user_id, judul, kategori, tanggal, deskripsi) VALUES (?, ?, ?, ?, ?)");
-            $stmt->bind_param("issss", $user_id, $judul, $kategori, $tanggal, $deskripsi);
+            // [PENAMBAHAN KEKURANGAN]: Insert dengan kolom waktu dan pengingat_offset
+            $stmt = $conn->prepare("INSERT INTO agenda (user_id, judul, kategori, tanggal, waktu, pengingat_offset, deskripsi) VALUES (?, ?, ?, ?, ?, ?, ?)");
+            $stmt->bind_param("issssis", $user_id, $judul, $kategori, $tanggal, $waktu, $offset, $deskripsi);
             
             if ($stmt->execute()) {
                 $pesan_alert = "Agenda baru berhasil ditambahkan!";
             }
         } elseif ($action == 'edit' && !empty($id_agenda)) {
-            $stmt = $conn->prepare("UPDATE agenda SET judul = ?, kategori = ?, tanggal = ?, deskripsi = ? WHERE id = ? AND user_id = ?");
-            $stmt->bind_param("ssssii", $judul, $kategori, $tanggal, $deskripsi, $id_agenda, $user_id);
+            // [PENAMBAHAN KEKURANGAN]: Update dengan kolom waktu dan pengingat_offset
+            $stmt = $conn->prepare("UPDATE agenda SET judul = ?, kategori = ?, tanggal = ?, waktu = ?, pengingat_offset = ?, deskripsi = ? WHERE id = ? AND user_id = ?");
+            $stmt->bind_param("ssssisii", $judul, $kategori, $tanggal, $waktu, $offset, $deskripsi, $id_agenda, $user_id);
             
             if ($stmt->execute()) {
                 $pesan_alert = "Agenda berhasil diperbarui!";
@@ -105,7 +111,7 @@ if ($query_agenda) {
     }
 }
 
-// 5. AMBIL DATA MILESTONE DINAMIS DARI DATABASE (DENGAN AUTOMATIC SEEDER) - IMPLEMENTASI BARU
+// 5. AMBIL DATA MILESTONE DINAMIS DARI DATABASE (DENGAN AUTOMATIC SEEDER)
 $milestone_list = [];
 $stmt_ms = $conn->prepare("SELECT * FROM milestones WHERE user_id = ? ORDER BY bulan_key ASC");
 $stmt_ms->bind_param("i", $user_id);
@@ -163,32 +169,32 @@ function hariIndo(string $tanggal)
 }
 
 // =========================================================================
-// 7. FITUR PENGINGAT DENGAN PENGATURAN JAM & OFFSET (VERSI STATIS MOCK)
+// 7. FITUR PENGINGAT DINAMIS (ALGORITMA PENCARIAN DATABASE)
 // =========================================================================
-// Simulasi: Membuat agenda Besok (18 Juli 2026) Jam 08:00 Pagi sesuai request Anda
-$mock_agenda_besok = [
-    'judul'              => 'Demo Aplikasi UTB Tracker & Sinkronisasi Fitur CRUD',
-    'tanggal_pelaksanaan'=> '2026-07-18',
-    'waktu_mulai'        => '08:00:00', // Agenda besok jam 8 pagi
-    'deskripsi'          => 'Mempersiapkan demonstrasi fungsionalitas kalender mandiri dan evaluasi milestone di depan dosen.',
-    'pengingat_offset'   => 20          // Jeda mundur 20 jam agar lolos validasi waktu server siang ini
-];
-
-// Logika hitung mundur deteksi kecocokan waktu
-$waktu_sekarang_ts = time(); 
-$agenda_target_ts  = strtotime($mock_agenda_besok['tanggal_pelaksanaan'] . ' ' . $mock_agenda_besok['waktu_mulai']);
-$offset_detik      = $mock_agenda_besok['pengingat_offset'] * 3600; 
-$waktu_mulai_ingatkan_ts = $agenda_target_ts - $offset_detik;
-
 $agenda_besok = null;
-// Jika waktu server sekarang sudah masuk waktu pengingat, kirim data ke frontend
-if ($waktu_sekarang_ts >= $waktu_mulai_ingatkan_ts) {
+
+// [PENAMBAHAN KEKURANGAN]: Ganti data mock statis menjadi pencarian SQL langsung ke database
+$query_reminder = $conn->prepare("
+    SELECT judul, tanggal, waktu, pengingat_offset, deskripsi 
+    FROM agenda 
+    WHERE user_id = ? 
+    AND CONCAT(tanggal, ' ', waktu) > NOW() 
+    AND NOW() >= DATE_SUB(CONCAT(tanggal, ' ', waktu), INTERVAL pengingat_offset HOUR)
+    ORDER BY tanggal ASC, waktu ASC 
+    LIMIT 1
+");
+
+$query_reminder->bind_param("i", $user_id);
+$query_reminder->execute();
+$result_reminder = $query_reminder->get_result();
+
+if ($row_reminder = $result_reminder->fetch_assoc()) {
     $agenda_besok = [
-        'judul'     => $mock_agenda_besok['judul'],
-        'waktu'     => $mock_agenda_besok['waktu_mulai'],
-        'offset'    => $mock_agenda_besok['pengingat_offset'],
-        'deskripsi' => $mock_agenda_besok['deskripsi'],
-        'tanggal'   => $mock_agenda_besok['tanggal_pelaksanaan'] // Ditambahkan sebagai ID unik penutupan modal
+        'judul'     => $row_reminder['judul'],
+        'tanggal'   => $row_reminder['tanggal'],
+        'waktu'     => $row_reminder['waktu'],
+        'offset'    => $row_reminder['pengingat_offset'],
+        'deskripsi' => $row_reminder['deskripsi']
     ];
 }
 ?>
