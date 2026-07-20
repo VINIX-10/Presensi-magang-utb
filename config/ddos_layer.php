@@ -6,8 +6,16 @@ $batas_request = 20;        // Maksimal request (Bisa diganti ke 3 untuk testing
 $jeda_waktu = 10;           // Dalam rentang 10 detik
 $waktu_hukuman = 300;       // HUKUMAN: Diblokir 300 detik (5 menit)
 
-// 1. TANGKAP IP ADDRESS PENGUNJUNG
-$ip_address = $_SERVER['REMOTE_ADDR'];
+// 1. TANGKAP IP ADDRESS PENGUNJUNG (MENEMBUS PROXY/CLOUDFLARE HOSTING)
+if (!empty($_SERVER['HTTP_CLIENT_IP'])) {
+    $ip_address = $_SERVER['HTTP_CLIENT_IP'];
+} elseif (!empty($_SERVER['HTTP_X_FORWARDED_FOR'])) {
+    // Terkadang X_FORWARDED_FOR mengembalikan banyak IP, kita ambil yang pertama (IP asli)
+    $ip_list = explode(',', $_SERVER['HTTP_X_FORWARDED_FOR']);
+    $ip_address = trim($ip_list[0]);
+} else {
+    $ip_address = $_SERVER['REMOTE_ADDR'];
+}
 
 // Ubah IP menjadi hash MD5 agar nama file aman dan rapi
 $nama_file = md5($ip_address) . '.json';
