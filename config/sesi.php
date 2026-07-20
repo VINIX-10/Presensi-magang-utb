@@ -2,7 +2,7 @@
 // ==========================================================
 // KEAMANAN LEVEL 3: PRODUCTION MODE (Matikan Tampilan Error)
 // ==========================================================
-error_reporting(0);
+error_reporting(E_ALL);
 ini_set('display_errors', 0);
 // ==========================================================
 session_start();
